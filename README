@@ -1,0 +1,13 @@
+xcb-demo: A collection of demo programs that use the XCB library.
+
+dpms........: test of the dpms extension.
+hypnomoire..: 
+rendertest..: test of the render extension.
+xcb-test....: test of the events on a window.
+xcbrandr....: test of the randr extension.
+xdpyinfo....: XCB port of the standard xdpyinfo.
+
+In tests/ :
+
+julia.......: example of XCBImage use, with a colormap.
+lissajoux...: simple example of XCBImage use.
