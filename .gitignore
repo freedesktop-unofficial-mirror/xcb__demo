@@ -18,6 +18,7 @@ ltmain.sh
 missing
 mkinstalldirs
 stamp-h1
+*.o
 hypnomoire
 dpms
 xcb-test

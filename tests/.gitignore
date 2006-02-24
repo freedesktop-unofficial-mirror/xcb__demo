@@ -3,3 +3,4 @@ Makefile
 .deps
 lissajoux
 julia
+flames
