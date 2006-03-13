@@ -25,6 +25,9 @@ double t_previous;
 double t;
 int    do_shm = 0;
 
+double tab_cos[3600];
+double tab_sin[3600];
+
 XCBShmSegmentInfo shminfo;
 
 double
@@ -68,11 +71,11 @@ draw_lissajoux (Data *datap)
   p1 = 4.0*t_previous*pi*0.05;
   p2 = 0.0;
 
-  nbr = 1000;
+  nbr = 10000;
   for (i = 0 ; i < nbr ; i++)
       {
-	x = cos (a1*i*period/nbr + p1);
-	y = sin (a2*i*period/nbr + p2);
+	x = tab_cos[(int)(a1*i + p1*nbr) % 3600];
+	y = tab_sin[(int)(a2*i + p2*nbr) % 3600];
 	XCBImagePutPixel (datap->image,
 			  (int)((double)(W_W-5)*(x+1)/2.0),
 			  (int)((double)(W_H-5)*(y+1)/2.0), 65535);
@@ -83,8 +86,8 @@ draw_lissajoux (Data *datap)
 
   for (i = 0 ; i < nbr ; i++)
       {
-	x = cos (a1*i*period/nbr + p1);
-	y = sin (a2*i*period/nbr + p2);
+	x = tab_cos[(int)(a1*i + p1*nbr) % 3600];
+	y = tab_sin[(int)(a2*i + p2*nbr) % 3600];
 	XCBImagePutPixel (datap->image,
 			  (int)((double)(W_W-5)*(x+1)/2.0),
 			  (int)((double)(W_H-5)*(y+1)/2.0), 0);
@@ -189,6 +192,7 @@ main (int argc, char *argv[])
   XCBGenericEvent *e;
   int              try_shm;
   int              screen_num;
+  int              i;
   
   try_shm = 0;
 
@@ -249,6 +253,11 @@ main (int argc, char *argv[])
 
   if (try_shm)
     shm_test (&data);
+
+  for (i = 0; i < 3600; i++) {
+    tab_cos[i] = cos (2.0 * 3.1415926535897 * (double)i / 3600.0);
+    tab_sin[i] = sin (2.0 * 3.1415926535897 * (double)i / 3600.0);
+  }
 
   time_start = get_time ();
   t_previous = 0.0;
