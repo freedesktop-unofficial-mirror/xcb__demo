@@ -60,7 +60,7 @@ int main()
 	pthread_t thr;
 	int i;
 
-	CARD32 mask = GCForeground | GCGraphicsExposures;
+	CARD32 mask = XCBGCForeground | XCBGCGraphicsExposures;
 	CARD32 values[2];
 	XCBDRAWABLE rootwin;
 	int screen_num;
@@ -130,13 +130,13 @@ void *run(void *param)
 		CARD32 values[3];
 		XCBRECTANGLE rect = { 0, 0, windows[idx].width, windows[idx].height };
 		values[0] = root->white_pixel;
-		values[1] = ButtonReleaseMask | ExposureMask;
-		values[2] = ButtonPressMask;
+		values[1] = XCBEventMaskButtonRelease | XCBEventMaskExposure;
+		values[2] = XCBEventMaskButtonPress;
 
 		XCBCreateWindow(c, depth, windows[idx].w.window, root->root,
 			/* x */ 0, /* y */ 0,
 			windows[idx].width, windows[idx].height,
-			/* border */ 0, InputOutput,
+			/* border */ 0, XCBWindowClassInputOutput,
 			/* visual */ root->root_visual,
 			mask, values);
 
@@ -155,12 +155,12 @@ void *run(void *param)
 	{
 		line[1].x = xo + r * cos(theta);
 		line[1].y = yo + r * sin(theta);
-		XCBPolyLine(c, CoordModeOrigin, windows[idx].p, black,
+		XCBPolyLine(c, XCBCoordModeOrigin, windows[idx].p, black,
 			2, line);
 
 		line[1].x = xo + r * cos(theta + LAG);
 		line[1].y = yo + r * sin(theta + LAG);
-		XCBPolyLine(c, CoordModeOrigin, windows[idx].p, white,
+		XCBPolyLine(c, XCBCoordModeOrigin, windows[idx].p, white,
 			2, line);
 
 		paint(idx);
@@ -216,11 +216,11 @@ void *event_thread(void *param)
 				fprintf(stderr, "ButtonRelease on unknown window!\n");
 			else
 			{
-				if(bre->detail.id == Button1)
+				if(bre->detail.id == XCBButton1)
 					windows[idx].angv = -windows[idx].angv;
-				else if(bre->detail.id == Button4)
+				else if(bre->detail.id == XCBButton4)
 					windows[idx].angv += 0.001;
-				else if(bre->detail.id == Button5)
+				else if(bre->detail.id == XCBButton5)
 					windows[idx].angv -= 0.001;
 			}
 		}

@@ -51,8 +51,8 @@ void print_setup()
     /* "\n" "XFree86 version: %d.%d.%d.%d" */
     printf("\n" "maximum request size:  %d bytes", XCBGetSetup(c)->maximum_request_length * 4);
     printf("\n" "motion buffer size:  %d", (int)XCBGetSetup(c)->motion_buffer_size);
-    printf("\n" "bitmap unit, bit order, padding:    %d, %s, %d", XCBGetSetup(c)->bitmap_format_scanline_unit, (XCBGetSetup(c)->bitmap_format_bit_order == LSBFirst) ? "LSBFirst" : "MSBFirst", XCBGetSetup(c)->bitmap_format_scanline_pad);
-    printf("\n" "image byte order:    %s", (XCBGetSetup(c)->image_byte_order == LSBFirst) ? "LSBFirst" : "MSBFirst");
+    printf("\n" "bitmap unit, bit order, padding:    %d, %s, %d", XCBGetSetup(c)->bitmap_format_scanline_unit, (XCBGetSetup(c)->bitmap_format_bit_order == XCBImageOrderLSBFirst) ? "LSBFirst" : "MSBFirst", XCBGetSetup(c)->bitmap_format_scanline_pad);
+    printf("\n" "image byte order:    %s", (XCBGetSetup(c)->image_byte_order == XCBImageOrderLSBFirst) ? "LSBFirst" : "MSBFirst");
 
     print_formats();
 

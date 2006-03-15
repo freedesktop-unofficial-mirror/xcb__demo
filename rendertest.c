@@ -186,7 +186,7 @@ int draw_window(XCBConnection *conn, XCBRenderQueryPictFormatsRep *reply)
             0, 0,   /* x and y */
             600, 600,   /* width and height */
             0,  /* border width */
-            InputOutput,    /* class */
+            XCBWindowClassInputOutput,    /* class */
             root->root_visual,   /* XCBVISUALID */
             value_mask, value_list); /* LISTofVALUES */
     

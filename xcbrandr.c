@@ -137,7 +137,7 @@ main (int argc, char **argv)
   int		width = 0, height = 0;
   int		have_pixel_size = 0;
   XCBGenericError *err;
-  CARD16 mask = (CARD16) StructureNotifyMask;
+  CARD16 mask = (CARD16) XCBEventMaskStructureNotify;
   CARD32 values[1];
   XCBRandRGetScreenInfoCookie scookie;
   int major_version, minor_version;
@@ -409,9 +409,6 @@ main (int argc, char **argv)
 	XRRUpdateConfiguration (&event);
 #endif
 	
-	if (event->response_type == ConfigureNotify)
-	  printf("Received ConfigureNotify Event!\n");
-	
 	switch (event->response_type - event_base) {
 	case XCBRandRScreenChangeNotify:
 	  sce = (XCBRandRScreenChangeNotifyEvent *) event;
@@ -437,7 +434,9 @@ main (int argc, char **argv)
 	  else printf ("new Subpixel rendering model is %s\n", order[spo]);
 	  break;
 	default:
-	  if (event->response_type != ConfigureNotify) 
+	  if (event->response_type == XCBConfigureNotify)
+	    printf("Received ConfigureNotify Event!\n");
+          else
 	    printf("unknown event received, type = %d!\n", event->response_type);
 	}
 	}

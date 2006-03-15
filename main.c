@@ -87,22 +87,23 @@ int main(int argc, char **argv)
     values[1] = root->black_pixel;
 
     mask |= XCBCWBackingStore;
-    values[2] = Always;
+    values[2] = XCBBackingStoreAlways;
 
     mask |= XCBCWOverrideRedirect;
     values[3] = 0;
 
     mask |= XCBCWEventMask;
-    values[4] = ButtonReleaseMask | ExposureMask | StructureNotifyMask
-        | EnterWindowMask | LeaveWindowMask;
+    values[4] = XCBEventMaskButtonRelease
+        | XCBEventMaskExposure | XCBEventMaskStructureNotify
+        | XCBEventMaskEnterWindow | XCBEventMaskLeaveWindow;
 
     mask |= XCBCWDontPropagate;
-    values[5] = ButtonPressMask;
+    values[5] = XCBEventMaskButtonPress;
 
     XCBCreateWindow(c, /* depth */ 0,
         window, root->root,
         /* x */ 20, /* y */ 200, /* width */ 150, /* height */ 150,
-        /* border_width */ 10, /* class */ InputOutput,
+        /* border_width */ 10, /* class */ XCBWindowClassInputOutput,
         /* visual */ root->root_visual, mask, values);
 #ifdef TEST_ICCCM
     atom[0] = XCBInternAtom(c, 0, sizeof("WM_PROTOCOLS")-1, "WM_PROTOCOLS");
@@ -112,14 +113,14 @@ int main(int argc, char **argv)
     {
         XCBATOM XA_WM_NAME = { 39 };
         XCBATOM XA_STRING = { 31 };
-        XCBChangeProperty(c, PropModeReplace, window, XA_WM_NAME, XA_STRING, 8, strlen(argv[0]), argv[0]);
+        XCBChangeProperty(c, XCBPropModeReplace, window, XA_WM_NAME, XA_STRING, 8, strlen(argv[0]), argv[0]);
     }
     if(atomrep[0] && atomrep[1])
     {
         XCBATOM WM_PROTOCOLS = atomrep[0]->atom;
         XCBATOM WM_DELETE_WINDOW = atomrep[1]->atom;
         XCBATOM XA_ATOM = { 4 };
-        XCBChangeProperty(c, PropModeReplace, window, WM_PROTOCOLS, XA_ATOM, 32, 1, &WM_DELETE_WINDOW);
+        XCBChangeProperty(c, XCBPropModeReplace, window, WM_PROTOCOLS, XA_ATOM, 32, 1, &WM_DELETE_WINDOW);
     }
     free(atomrep[0]);
     free(atomrep[1]);
