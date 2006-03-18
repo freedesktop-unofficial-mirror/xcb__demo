@@ -1,0 +1,55 @@
+XCB TODO
+--------
+* needs testing on Linux, x86, <32 
+  * XPutImage does all sorts of image conversion, required for
+    making the 1Ll bitmaps compatible with the display.
+    I only supported (1Ll --> 4Mm)
+  * Move such support to xcb-image
+* -root needs testing (Mac X is rootless)
+* DEBUG not supported
+* -geometry not supported
+* WM hints, -iconic not supported (don't like the util interfaces)
+* quit on Alt-Q not supported (XLookupString)
+
+XCB ENHANCEMENTS
+----------------
+* autoconf
+* too many globals! refactor
+* no X resource cleanup. OK?
+* convert to use threading
+  * multi-neko!
+=======================
+
+This is XNeko.
+I have added color and root capability to this app.
+I had nothing to do with anything except these modifications.
+Don't look at the code.
+
+-----------------------
+ INSTALLATION
+-----------------------
+% xmkmf -a
+% make
+Dat's it.
+
+-----------------------
+ HELP
+-----------------------
+% xneko -help
+Dat's it.
+
+-----------------------
+ COLORS
+-----------------------
+% xneko -bg <background> -fg <foreground>
+Dat's it.
+
+-----------------------
+ ROOTWINDOW OPS
+-----------------------
+% xneko -root
+Dat's it.
+
+Enjoy.
+
+Dan Checkoway   8/4/94

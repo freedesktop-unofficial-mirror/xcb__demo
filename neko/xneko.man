@@ -1,0 +1,90 @@
+.TH xneko SIPB "1 September 1990" "X Version 11"
+.SH NAME
+xneko \- Cat-and-Mouse Chase
+.SH SYNOPSIS
+xneko
+.I options
+.SH OPTIONS
+.br
+.B -display
+.I displayName
+.br
+.B -geometry
+.I geometry
+.br
+.B -bg
+.I backgroundColor
+.br
+.B -fg
+.I foregroundColor
+.br
+.B -title
+.I windowTitle
+.br
+.B -name
+.I name
+.br
+.B -iconic
+.br
+.B -speed
+.I catSpeed
+(0-16)
+.br
+.B -time
+.I updateInterval
+(in microseconds)
+.br
+.B -root
+.br
+.B -help
+.SH DESCRIPTION
+.I Xneko
+displays a window in which a cat chases your "mouse" cursor.  Try
+moving the mouse inside and outside the
+.I xneko
+window, leaving it stationary, moving it slowly and quickly, etc., and
+watch the cat respond.
+.PP
+To exit, either click the 3rd mouse button on the
+.I xneko
+window, or hit
+.I Meta-Q
+.
+.PP
+All options except the last four above behave in the standard manner
+for X applications (see
+.IR X (1)).
+The
+.B -speed
+option controls the speed of the cat (the default is 16).  The
+.B -time
+option controls the interval (in microseconds) between updates of the
+.I xneko
+window (the default is 125000).
+.PP
+The
+.B -root
+option allows
+.I xneko
+to operate on the root as opposed to creating and running in its own window.
+.PP
+The
+.B -help
+option provides a usage message and exits.
+.PP
+The program was originally written by a Japanese author as a
+Macintosh\(TM desktop accessory (The word "neko" means "cat" in
+Japanese).
+.PP
+The capabilities to use color and to run on the root window were
+added by
+.I Dan Checkoway
+.
+.SH SEE ALSO
+X(1)
+.SH DIAGNOSTICS
+A usage message when improper arguments are supplied.
+.SH AUTHORS
+Masayuki Koba, 1990
+.br
+Dan Checkoway, 1994
