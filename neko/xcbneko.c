@@ -509,7 +509,7 @@ void  InitBitmapAndGCs(void) {
   
   /* later: XCBFreePixmap( c, bitmap ); */
   /* later: XCBFreeGC( c, gc ); */
-  XCBSync( xc, NULL );
+  XCBFlush( xc );
 }
 
 void
@@ -697,7 +697,7 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 
   InitBitmapAndGCs();
 
-  XCBSync(xc, NULL);
+  XCBFlush(xc);
 }
 
 
@@ -744,7 +744,7 @@ SetNekoState( int SetValue )
 }
 
 /* FillRct.c */
-/*   Xlib does merging of requests, but the Sync and frequent DrawGC changes
+/*   Xlib does merging of requests, but the Flush and frequent DrawGC changes
      defeat this mechanism */
 
 void
@@ -767,7 +767,7 @@ DrawNeko( int x, int y, XCBGCONTEXT DrawGC )
 
   XCBPolyFillRectangle( xc, drawable, DrawGC, 1, &rect );
 
-  XCBSync( xc, NULL );
+  XCBFlush( xc );
 
   NekoLastX = x;
   NekoLastY = y;
@@ -782,7 +782,7 @@ void  RedrawNeko(void) {
 
   XCBPolyFillRectangle( xc, drawable, NekoLastGC, 1, &rect );
 
-  XCBSync( xc, NULL );
+  XCBFlush( xc );
 }
 
 
