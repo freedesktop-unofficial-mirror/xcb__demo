@@ -27,6 +27,7 @@
 #include <X11/XCB/xcb_aux.h>		/* XCBAuxGetScreen */
 #include <X11/XCB/xcb_icccm.h>
 #include <X11/XCB/xcb_atom.h>		/* STRING atom */
+#include <X11/XCB/xcb_keysyms.h>
 
 typedef enum { False, True } Bool;
 
@@ -148,6 +149,7 @@ unsigned long  theBlackPixel;
 unsigned long  theWhitePixel;
 XCBWINDOW         theWindow;
 XCBCURSOR         theCursor;
+XCBKeySymbols	*theKeySyms;
 
 static unsigned int  WindowWidth;
 static unsigned int  WindowHeight;
@@ -509,7 +511,6 @@ void  InitBitmapAndGCs(void) {
   
   /* later: XCBFreePixmap( c, bitmap ); */
   /* later: XCBFreeGC( c, gc ); */
-  XCBFlush( xc );
 }
 
 void
@@ -698,6 +699,12 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
   InitBitmapAndGCs();
 
   XCBFlush(xc);
+
+  /* latency: ask for keysyms now, and receive them later */
+  theKeySyms = XCBKeySymbolsAlloc( xc );
+
+  /* later: XCBKeySymbolsFree( keysyms ); */
+  /* later: XCBRefreshKeyboardMapping ( keysyms, mappingEvent ); */
 }
 
 
@@ -1076,36 +1083,17 @@ void  DisplayCharacters() {
 Bool
 ProcessKeyPress( XCBKeyPressEvent *theKeyEvent )
 {
-#if TODO    
   Bool ReturnState = True;
 
-  int			Length;
-  char		theKeyBuffer[ AVAIL_KEYBUF + 1 ];
-    int			theKeyBufferMaxLen = AVAIL_KEYBUF;
-  KeySym		theKeySym;
-  XComposeStatus	theComposeStatus;
+  /* quit on Meta-Q (Alt-Q) */
+  XCBKEYSYM theKeySym;
 
-  Length = XLookupString( theKeyEvent,
-						 theKeyBuffer, theKeyBufferMaxLen,
-						 &theKeySym, &theComposeStatus );
+  /* last param is "int col". What? add enumeration to xcb_keysyms.h */
+  theKeySym = XCBKeyPressLookupKeysym( theKeySyms, theKeyEvent, 1 );
 
-  if ( Length > 0 ) {
-	switch ( theKeyBuffer[ 0 ] ) {
-	case 'q':
-	case 'Q':
-	  if ( theKeyEvent->state & XCBModMask1 ) {	/* META (Alt) %-!< */
-		ReturnState = False;
-	  }
-	  break;
-	default:
-	  break;
-	}
-  }
-#else
-  /* quit on any key */
-  Bool ReturnState = False;
-#endif
-
+  /* KeySym XK_Q == 'Q' */
+  if (theKeySym.id == 'Q' && (theKeyEvent->state & XCBModMask1))
+    ReturnState = False;
 
 #ifdef	DEBUG
   if ( EventState == DEBUG_MOVE ) {

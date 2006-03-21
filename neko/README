@@ -9,7 +9,6 @@ XCB TODO
 * DEBUG not supported
 * -geometry not supported
 * WM hints, -iconic not supported (don't like the util interfaces)
-* quit on Alt-Q not supported (XLookupString)
 
 XCB ENHANCEMENTS
 ----------------
