@@ -8,11 +8,12 @@ XCB TODO
 * -root needs testing (Mac X is rootless)
 * DEBUG not supported
 * -geometry not supported
-* WM hints, -iconic not supported (don't like the util interfaces)
+* -iconic not supported (don't like the util interfaces)
 
 XCB ENHANCEMENTS
 ----------------
 * autoconf
+* use WM_DELETE_WINDOW protocol
 * too many globals! refactor
 * no X resource cleanup. OK?
 * convert to use threading
