@@ -125,7 +125,7 @@ step (Data *datap)
     }
 }
 
-/* Return 0 if shm is not availaible, 1 otherwise */
+/* Return 0 if shm is not available, 1 otherwise */
 void
 shm_test (Data *datap)
 {
@@ -201,7 +201,7 @@ main (int argc, char *argv[])
     {
       printf ("Usage: lissajoux try_shm\n");
       printf ("         try_shm == 0: shm not used\n");
-      printf ("         try_shm != 0: shm is used (if availaible)\n");
+      printf ("         try_shm != 0: shm is used (if available)\n");
       exit (0);
     }
   if (argc >= 2)
