@@ -423,17 +423,23 @@ XCBPIXMAP CreatePixmapFromBitmapData( XCBConnection *c,
   /*  must swap and pad the data if bit/byte_order isn't LSB (Mac) */
   
   /* Mac X Server: byte_order=bit_order=MSB, unit=32, padding=32 */
-  long bufLen = (w+7)/8*h;
+  long bpl = (w+7)/8;
+  long pad = XCBGetSetup(c)->bitmap_format_scanline_pad;
+  long bpd = ROUNDUP(w, pad)>>3;
+  long bufLen = bpd * h;
   BYTE buf[1024];
   if (XCBGetSetup(c)->bitmap_format_scanline_unit == 32 &&
       XCBGetSetup(c)->bitmap_format_bit_order == XCBImageOrderMSBFirst &&
       XCBGetSetup(c)->image_byte_order == XCBImageOrderMSBFirst)
   {
-    long bpl = (w+7)/8;
-    long pad = XCBGetSetup(c)->bitmap_format_scanline_pad;
-    long bpd = ROUNDUP(w, pad)>>3;
-    SwapBits((unsigned char *)data, (unsigned char *)buf, bpl, bpl, bpd, h);
-    bufLen = bpd * h;
+    SwapBits((unsigned char *)data, buf, bpl, bpl, bpd, h);
+  }
+  else if (bpl != bpd)
+  {
+    int i;
+    BYTE *src = (BYTE *)data, *dest = buf;
+    for (i=0; i<h; i++, dest += bpd, src += bpl)
+      memcpy(dest, src, bpl);
   }
   else
     memcpy(buf, data, bufLen);
