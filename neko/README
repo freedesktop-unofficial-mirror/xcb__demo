@@ -1,10 +1,5 @@
 XCB TODO
 --------
-* needs testing on Linux, x86, <32 
-  * XPutImage does all sorts of image conversion, required for
-    making the 1Ll bitmaps compatible with the display.
-    I only supported (1Ll --> 4Mm)
-  * Move such support to xcb-image
 * -root needs testing (Mac X is rootless)
 * DEBUG not supported
 * -geometry not supported
@@ -12,8 +7,7 @@ XCB TODO
 
 XCB ENHANCEMENTS
 ----------------
-* autoconf
-* use WM_DELETE_WINDOW protocol
+* autoconf (using `pkg-config` for now)
 * too many globals! refactor
 * no X resource cleanup. OK?
 * convert to use threading
