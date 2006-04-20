@@ -141,15 +141,14 @@ char        *fgColor, *bgColor;
 
 static char  *ProgramName;
 
-/*Display        *theDisplay;*/
 XCBConnection	*xc;
 XCBSCREEN      *theScreen;		/* instead of macro(theDisplay, int theScreen) */
-unsigned int   theDepth;
 unsigned long  theBlackPixel;
 unsigned long  theWhitePixel;
 XCBWINDOW         theWindow;
 XCBCURSOR         theCursor;
 XCBKeySymbols	*theKeySyms;
+XCBATOM deleteWindowAtom;
 
 static unsigned int  WindowWidth;
 static unsigned int  WindowHeight;
@@ -424,17 +423,23 @@ XCBPIXMAP CreatePixmapFromBitmapData( XCBConnection *c,
   /*  must swap and pad the data if bit/byte_order isn't LSB (Mac) */
   
   /* Mac X Server: byte_order=bit_order=MSB, unit=32, padding=32 */
-  long bufLen = (w+7)/8*h;
+  long bpl = (w+7)/8;
+  long pad = XCBGetSetup(c)->bitmap_format_scanline_pad;
+  long bpd = ROUNDUP(w, pad)>>3;
+  long bufLen = bpd * h;
   BYTE buf[1024];
   if (XCBGetSetup(c)->bitmap_format_scanline_unit == 32 &&
       XCBGetSetup(c)->bitmap_format_bit_order == XCBImageOrderMSBFirst &&
       XCBGetSetup(c)->image_byte_order == XCBImageOrderMSBFirst)
   {
-    long bpl = (w+7)/8;
-    long pad = XCBGetSetup(c)->bitmap_format_scanline_pad;
-    long bpd = ROUNDUP(w, pad)>>3;
-    SwapBits((unsigned char *)data, (unsigned char *)buf, bpl, bpl, bpd, h);
-    bufLen = bpd * h;
+    SwapBits((unsigned char *)data, buf, bpl, bpl, bpd, h);
+  }
+  else if (bpl != bpd)
+  {
+    int i;
+    BYTE *src = (BYTE *)data, *dest = buf;
+    for (i=0; i<h; i++, dest += bpd, src += bpl)
+      memcpy(dest, src, bpl);
   }
   else
     memcpy(buf, data, bufLen);
@@ -513,11 +518,25 @@ void  InitBitmapAndGCs(void) {
   /* later: XCBFreeGC( c, gc ); */
 }
 
+XCBATOM
+GetAtom(XCBConnection *c, const char *atomName)
+{
+	XCBATOM atom = { XCBNone };
+	XCBInternAtomRep *r = XCBInternAtomReply(c,
+		XCBInternAtom(c, 0, strlen(atomName), atomName), NULL);
+	if (r) {
+		atom = r->atom;
+		free(r);
+	}
+	return atom;
+}
+
 void
 InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicState )
 {
   XCBPIXMAP		theCursorSource;
   XCBPIXMAP		theCursorMask;
+  unsigned int   theDepth;
   XCBCOLORMAP		theColormap;
   int screen;
   
@@ -629,19 +648,13 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 		theScreen->root_visual, /* CopyFromParent */
 		theWindowMask, theWindowAttributes );
 
+	/* new: obey the window-delete protocol, look for XCBClientMessage */
+	deleteWindowAtom = GetAtom(xc, "WM_DELETE_WINDOW");
+	SetWMProtocols( xc, theWindow, 1, &deleteWindowAtom );
+
 	theIconPixmap = CreateBitmapFromData( xc, theWindow,
 										  icon_bits, icon_width, icon_height );
-	
 #ifdef TODO_ICCCM
-    /* Um... there is no function to send the hints...
-	WMHints              theWMHints;
-	WMHintsSetIconPixmap( &theHints, theIconPixmap );
-
-	if ( iconicState )
-	  WMHintsSetIconic( &theHints );
-	else
-	  WMHintsSetNormal( &theHints );
-    */
 	theWMHints.icon_pixmap = theIconPixmap;
 	
 	if ( iconicState )
@@ -652,35 +665,36 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 	theWMHints.flags = IconPixmapHint | StateHint;
 	
 	XSetWMHints( theDisplay, theWindow, &theWMHints );
+#else
+    /* Um... there is no function to send the hints...
+	WMHints              theWMHints;
+	WMHintsSetIconPixmap( &theHints, theIconPixmap );
+
+	if ( iconicState )
+	  WMHintsSetIconic( &theHints );
+	else
+	  WMHintsSetNormal( &theHints );
+	  
+	Now what?
+    */
 #endif
 
-#ifdef TODO_ICCCM
-	/*
-	SizeHints *hints = AllocSizeHints();
-	SizeHintsSetPosition(hints, WindowPointX, WindowPointY);
-	SizeHintsSetSize(hints, WindowWidth, WindowHeight);
-	SetWMNormalHints(xc, theWindow, hints);
-	FreeSizeHints(hints);
-	*/
-	XSizeHints            theSizeHints;
+	/* why hide the structure? */
+	SizeHints *theSizeHints = AllocSizeHints();
 
-	theSizeHints.flags = PPosition | PSize;
-	theSizeHints.x = WindowPointX;
-	theSizeHints.y = WindowPointY;
-	theSizeHints.width = WindowWidth;
-	theSizeHints.height = WindowHeight;
-	
-	XSetNormalHints( theDisplay, theWindow, &theSizeHints );
-#endif
+	/* need enum for second param (user specified) */
+	SizeHintsSetPosition(theSizeHints, 0, WindowPointX, WindowPointY);
+	SizeHintsSetSize(theSizeHints, 0, WindowWidth, WindowHeight);
+
+	SetWMNormalHints(xc, theWindow, theSizeHints);
+
+	FreeSizeHints(theSizeHints);
 
 	/* Um, why do I have to specify the encoding in this API? */
 	SetWMName( xc, theWindow, STRING, strlen(theTitle), theTitle );
 	SetWMIconName( xc, theWindow, STRING, strlen(theTitle), theTitle );
 
 	XCBMapWindow( xc, theWindow );
-
-    /* moved to the CreateWindow attribute list */
-	/* XSelectInput( theDisplay, theWindow, EVENT_MASK ); */
 
   }
   
@@ -1154,6 +1168,11 @@ void  NekoAdjust(void) {
 	NekoY = WindowHeight - BITMAP_HEIGHT;
 }
 
+int IsDeleteMessage(XCBClientMessageEvent *msg)
+{
+	return msg->data.data32[0] == deleteWindowAtom.xid;
+}
+
 Bool  ProcessEvent(void) {
   XCBGenericEvent *theEvent;
   XCBConfigureNotifyEvent *theConfigureNotification;
@@ -1164,8 +1183,9 @@ Bool  ProcessEvent(void) {
   
   switch ( EventState ) {
   case NORMAL_STATE:
-    while ( NULL != (theEvent = XCBPollForEvent( xc, &error )) ) {  /*while ( XCheckMaskEvent( theDisplay, EVENT_MASK, &theEvent ) ) {*/
-	  switch ( theEvent->response_type ) {
+    while ( ContinueState &&
+            NULL != (theEvent = XCBPollForEvent( xc, &error )) ) {  /*while ( XCheckMaskEvent( theDisplay, EVENT_MASK, &theEvent ) ) {*/
+	  switch ( theEvent->response_type & 0x7f ) {
 	  case XCBConfigureNotify:
 	    theConfigureNotification = (XCBConfigureNotifyEvent *)theEvent;
 		WindowWidth = theConfigureNotification->width;
@@ -1185,26 +1205,24 @@ Bool  ProcessEvent(void) {
 		break;
 	  case XCBKeyPress:
 		ContinueState = ProcessKeyPress( (XCBKeyPressEvent *)theEvent );
-		if ( !ContinueState ) {
-		  free(theEvent);
-		  return( ContinueState );
-		}
 		break;
 	  case XCBButtonPress:
 	    theButtonPress = (XCBButtonPressEvent *)theEvent;
-		if ( theButtonPress->detail.id == 3 ) {	/* xbutton.button */
-		  free(theEvent);
-		  return( False );
-		}
+		ContinueState = ( theButtonPress->detail.id != 3 );	/* xbutton.button */
 		break;
+	  /* new: handle ClientMessage */
+	  case XCBClientMessage:
+	    ContinueState = !IsDeleteMessage((XCBClientMessageEvent *)theEvent);
+	    break;
 	  default:
 		/* Unknown Event */
+		/*printf("event type:%x\n", (int)theEvent->response_type);*/
 		break;
 	  }
 	  free(theEvent);
 	  if (error != 0)
 	  	return False;
-	}
+	} /* end while */
 	break;
 #ifdef	DEBUG
   case DEBUG_LIST:
