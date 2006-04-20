@@ -1,5 +1,6 @@
-CFLAGS = `pkg-config --cflags xcb` -g -Wall -Wpointer-arith -Wstrict-prototypes
-LIBS = `pkg-config --libs xcb-aux xcb-icccm xcb-atom xcb-keysyms` -lm
+pkgs = xcb xcb-aux xcb-icccm xcb-atom xcb-keysyms
+CFLAGS = `pkg-config --cflags $(pkgs)` -g -Wall -Wpointer-arith -Wstrict-prototypes
+LIBS = `pkg-config --libs $(pkgs)` -lm
 
 xcbneko:	xcbneko.c
 	$(CC) $(CFLAGS) xcbneko.c $(LIBS) -o xcbneko
