@@ -126,7 +126,7 @@ int draw_window(XCBConnection *conn, XCBRenderQueryPictFormatsRep *reply)
     XCBRenderPOINTFIX        trifans[9];
     int index;
 
-    root = XCBConnSetupSuccessRepRootsIter(XCBGetSetup(c)).data;
+    root = XCBSetupRootsIter(XCBGetSetup(c)).data;
     root_drawable.window = root->root;
    
     /* Setting query so that it will search for an 8 bit alpha surface. */

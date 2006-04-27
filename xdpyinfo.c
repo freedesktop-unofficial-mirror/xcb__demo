@@ -46,7 +46,7 @@ void print_setup()
 {
     printf("version number:    %d.%d", XCBGetSetup(c)->protocol_major_version, XCBGetSetup(c)->protocol_minor_version);
     fputs("\n" "vendor string:    ", stdout);
-    fwrite(XCBConnSetupSuccessRepVendor(XCBGetSetup(c)), 1, XCBConnSetupSuccessRepVendorLength(XCBGetSetup(c)), stdout);
+    fwrite(XCBSetupVendor(XCBGetSetup(c)), 1, XCBSetupVendorLength(XCBGetSetup(c)), stdout);
     printf("\n" "vendor release number:    %d", (int) XCBGetSetup(c)->release_number);
     /* "\n" "XFree86 version: %d.%d.%d.%d" */
     printf("\n" "maximum request size:  %d bytes", XCBGetSetup(c)->maximum_request_length * 4);
@@ -61,8 +61,8 @@ void print_setup()
 
 void print_formats()
 {
-    int i = XCBConnSetupSuccessRepPixmapFormatsLength(XCBGetSetup(c));
-    XCBFORMAT *p = XCBConnSetupSuccessRepPixmapFormats(XCBGetSetup(c));
+    int i = XCBSetupPixmapFormatsLength(XCBGetSetup(c));
+    XCBFORMAT *p = XCBSetupPixmapFormats(XCBGetSetup(c));
     printf("\n" "number of supported pixmap formats:    %d", i);
     fputs("\n" "supported pixmap formats:", stdout);
     for(--i; i >= 0; --i, ++p)
@@ -136,7 +136,7 @@ void list_screens()
     XCBSCREENIter i;
     int cur;
 
-    i = XCBConnSetupSuccessRepRootsIter(XCBGetSetup(c));
+    i = XCBSetupRootsIter(XCBGetSetup(c));
     printf("\n" "number of screens:    %d" "\n", i.rem);
     for(cur = 1; i.rem; XCBSCREENNext(&i), ++cur)
     {
