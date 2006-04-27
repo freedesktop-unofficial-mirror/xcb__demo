@@ -13,7 +13,7 @@ static void PrintUsage()
 
 XCBSCREEN *ScreenOfDisplay (XCBConnection *c, int screen)
 {
-    XCBSCREENIter iter = XCBConnSetupSuccessRepRootsIter (XCBGetSetup (c));
+    XCBSCREENIter iter = XCBSetupRootsIter (XCBGetSetup (c));
     for (; iter.rem; --screen, XCBSCREENNext (&iter))
         if (screen == 0)
             return iter.data;
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 
     free(query_ext);
 
-    nscreens = XCBConnSetupSuccessRepRootsIter(XCBGetSetup(c)).rem;
+    nscreens = XCBSetupRootsLength(XCBGetSetup(c));
 
     for (i = 0; i < nscreens; i++)
     {
