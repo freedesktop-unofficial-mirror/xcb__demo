@@ -87,7 +87,7 @@ fake_motion(XCBConnection *c, BOOL relative, CARD16 x, CARD16 y)
   XCBWINDOW window = { XCBNone };
 
   if (!relative) {
-    window = XCBConnSetupSuccessRepRootsIter(XCBGetSetup(c)).data->root;
+    window = XCBSetupRootsIter(XCBGetSetup(c)).data->root;
   }
   XCBTestFakeInput( c, XCBMotionNotify, relative, 0, window, x, y, 0 );
 }
