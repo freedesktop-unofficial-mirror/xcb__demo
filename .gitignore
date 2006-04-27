@@ -1,6 +1,8 @@
-hypnomoire
 dpms
-xcb-test
+hypnomoire
 rendertest
-xdpyinfo
+xcb-test
 xcbrandr
+xcbxf86dri
+xcbxvinfo
+xdpyinfo
