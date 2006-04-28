@@ -417,7 +417,7 @@ main (int argc, char **argv)
 	  printf(" window = %d\n root = %d\n size_index = %d\n rotation %d\n", 
 	       (int) sce->request_window.xid, (int) sce->root.xid, 
 	       sce->sizeID,  sce->rotation);
-	  printf(" timestamp = %ld, config_timestamp = %ld\n",
+	  printf(" timestamp = %d, config_timestamp = %d\n",
 	       sce->timestamp, sce->config_timestamp);
 	  printf(" Rotation = %x\n", sce->rotation);
 	  printf(" %d X %d pixels, %d X %d mm\n",

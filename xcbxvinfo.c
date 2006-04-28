@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
         adaptors_rep = XCBXvQueryAdaptorsReply(c, XCBXvQueryAdaptors(c, root_window), NULL);
         if (!adaptors_rep->num_adaptors) {
             fprintf(stdout, " no adaptors present.\n");
+            free(adaptors_rep);
             continue;
         }
 
@@ -113,7 +114,7 @@ int main(int argc, char *argv[])
             name = ExtractString(XCBXvAdaptorInfoName(ainfo), XCBXvAdaptorInfoNameLength(ainfo));
             fprintf(stdout, "  Adaptor #%i: \"%s\"\n", j, name);
             fprintf(stdout, "    number of ports: %i\n", ainfo->num_ports);
-            fprintf(stdout, "    port base: %li\n", ainfo->base_id.xid);
+            fprintf(stdout, "    port base: %i\n", ainfo->base_id.xid);
             fprintf(stdout, "    operations supported: ");
             free(name);
 
@@ -142,7 +143,7 @@ int main(int argc, char *argv[])
 
             fprintf(stdout, "    supported visuals:\n");
             for (k=0; k < ainfo->num_formats; k++, format++)
-                fprintf(stdout, "      depth %i, visualID 0x%2lx\n",
+                fprintf(stdout, "      depth %i, visualID 0x%2x\n",
                         format->depth, format->visual.id);
 
             attr_rep = XCBXvQueryPortAttributesReply(c,
@@ -155,7 +156,7 @@ int main(int argc, char *argv[])
 
                 for (k = 0; k < nattr; k++) {
                     attribute = attr_iter.data;
-                    fprintf(stdout, "      \"%s\" (range %li to %li)\n",
+                    fprintf(stdout, "      \"%s\" (range %i to %i)\n",
                             XCBXvAttributeInfoName(attribute),
                             attribute->min,
                             attribute->max);
@@ -183,7 +184,7 @@ int main(int argc, char *argv[])
                                 XCBXvGetPortAttributeReply(c,
                                         XCBXvGetPortAttribute(c, ainfo->base_id, the_atom),
                                         NULL);
-                            if (pattr_rep) fprintf(stdout, " (current value is %li)", pattr_rep->value);
+                            if (pattr_rep) fprintf(stdout, " (current value is %i)", pattr_rep->value);
                             free(pattr_rep);
                         }
                         fprintf(stdout, "\n");
@@ -224,7 +225,7 @@ int main(int argc, char *argv[])
                         name = ExtractString(XCBXvEncodingInfoName(encoding), XCBXvEncodingInfoNameLength(encoding));
                         if(nstrcmp(name, strlen(name), "XV_IMAGE")) {
                             fprintf(stdout,
-                                    "      encoding ID #%li: \"%*s\"\n",
+                                    "      encoding ID #%i: \"%*s\"\n",
                                     encoding->encoding.xid,
                                     strlen(name),
                                     name);
@@ -268,7 +269,7 @@ int main(int argc, char *argv[])
                     for(n = 0; n < numImages; n++) {
                         format = formats_iter.data;
                         memcpy(imageName, &(format->id), 4);
-                        fprintf(stdout, "      id: 0x%lx", format->id);
+                        fprintf(stdout, "      id: 0x%x", format->id);
                         if(isprint(imageName[0]) && isprint(imageName[1]) &&
                                 isprint(imageName[2]) && isprint(imageName[3])) 
                         {
@@ -323,7 +324,7 @@ int main(int argc, char *argv[])
                                     format->depth);
 
                             fprintf(stdout, "        red, green, blue masks: " 
-                                    "0x%lx, 0x%lx, 0x%lx\n", 
+                                    "0x%x, 0x%x, 0x%x\n", 
                                     format->red_mask,
                                     format->green_mask,
                                     format->blue_mask);
@@ -338,10 +339,8 @@ int main(int argc, char *argv[])
             free(qencodings_rep);
             XCBXvAdaptorInfoNext(&adaptors_iter);
         }
+        free(adaptors_rep);
     }
 
-    free(adaptors_rep);
-    adaptors_rep = NULL;
-
-    return 1;
+    return 0;
 }

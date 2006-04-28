@@ -26,7 +26,7 @@ XCBRenderFIXED make_fixed(INT16 i, INT16 f)
 void print_version_info(XCBRenderQueryVersionRep *reply)
 {
     
-    fprintf(stdout, "Render Version: %ld.%ld\n", reply->major_version, 
+    fprintf(stdout, "Render Version: %d.%d\n", reply->major_version, 
             reply->minor_version);
 }
 
@@ -53,7 +53,7 @@ int print_formats_info(XCBRenderQueryPictFormatsRep *reply)
         XCBRenderPICTFORMINFO *forminfo = (XCBRenderPICTFORMINFO *)forminfo_iter.data;
 
         fprintf(stdout, "PICTFORMINFO #%d\n", 1 + num_formats - forminfo_iter.rem);
-        fprintf(stdout, "    PICTFORMAT ID:          %ld\n", forminfo->id.xid);
+        fprintf(stdout, "    PICTFORMAT ID:          %d\n", forminfo->id.xid);
         fprintf(stdout, "    PICTFORMAT Type:        %d\n", forminfo->type);
         fprintf(stdout, "    PICTFORMAT Depth:       %d\n", forminfo->depth);
         fprintf(stdout, "        Direct RedShift:    %d\n", forminfo->direct.red_shift);
@@ -75,8 +75,8 @@ int print_formats_info(XCBRenderQueryPictFormatsRep *reply)
         XCBRenderPICTSCREEN *cscreen = screen_iter.data;
         
         fprintf(stdout, "Screen #%d\n", 1 + num_screens - screen_iter.rem);
-        fprintf(stdout, "    Depths for this screen:    %ld\n", cscreen->num_depths);
-        fprintf(stdout, "    Fallback PICTFORMAT:       %ld\n", cscreen->fallback.xid);
+        fprintf(stdout, "    Depths for this screen:    %d\n", cscreen->num_depths);
+        fprintf(stdout, "    Fallback PICTFORMAT:       %d\n", cscreen->fallback.xid);
         depth_iter = XCBRenderPICTSCREENDepthsIter(cscreen);
 
         num_depths = cscreen->num_depths;
@@ -96,8 +96,8 @@ int print_formats_info(XCBRenderQueryPictFormatsRep *reply)
                 XCBRenderPICTVISUAL *cvisual = visual_iter.data;
                 
                 fprintf(stdout, "        Visual #%d\n", 1 + num_visuals - visual_iter.rem);
-                fprintf(stdout, "            VISUALID:      %ld\n", cvisual->visual.id);
-                fprintf(stdout, "            PICTFORMAT:    %ld\n", cvisual->format.xid);
+                fprintf(stdout, "            VISUALID:      %d\n", cvisual->visual.id);
+                fprintf(stdout, "            PICTFORMAT:    %d\n", cvisual->format.xid);
                 XCBRenderPICTVISUALNext(&visual_iter);
             }
             XCBRenderPICTDEPTHNext(&depth_iter);
@@ -542,10 +542,10 @@ int main(int argc, char *argv[])
     forminfo_query.direct.alpha_mask = 255;
     
     forminfo_result = get_pictforminfo(formats_reply, &forminfo_query);
-    fprintf(stdout, "\n***** found PICTFORMAT:  %ld *****\n",
+    fprintf(stdout, "\n***** found PICTFORMAT:  %d *****\n",
             forminfo_result->id.xid);
     rootformat = get_pictformat_from_visual(formats_reply, root->root_visual);
-    fprintf(stdout, "\n***** found root PICTFORMAT:   %ld *****\n", rootformat.xid);
+    fprintf(stdout, "\n***** found root PICTFORMAT:   %d *****\n", rootformat.xid);
    
 #if 0
     draw_window(c, formats_reply);

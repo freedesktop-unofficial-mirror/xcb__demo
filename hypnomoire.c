@@ -50,8 +50,8 @@ static void get_depth()
 	}
 
 	depth = geom->depth;
-	fprintf(stderr, "Root 0x%lx: %dx%dx%d\n",
-		 root->root.xid, geom->width, geom->height, geom->depth);
+	fprintf(stderr, "Root 0x%x: %dx%dx%d\n",
+	        root->root.xid, geom->width, geom->height, geom->depth);
 	free(geom);
 }
 
@@ -172,6 +172,8 @@ void *run(void *param)
 
 		usleep(1000000 / FRAME_RATE);
 	}
+
+        return 0;
 }
 
 int lookup_window(XCBWINDOW w)
