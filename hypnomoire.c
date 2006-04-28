@@ -172,6 +172,8 @@ void *run(void *param)
 
 		usleep(1000000 / FRAME_RATE);
 	}
+
+        return 0;
 }
 
 int lookup_window(XCBWINDOW w)
