@@ -5,7 +5,7 @@ hypnomoire..:
 rendertest..: test of the render extension.
 xcb-test....: test of the events on a window.
 xcbrandr....: test of the randr extension.
-xdpyinfo....: XCB port of the standard xdpyinfo.
+xcbdpyinfo..: XCB port of the standard xdpyinfo.
 
 In tests/ :
 

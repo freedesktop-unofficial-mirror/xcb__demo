@@ -9,13 +9,13 @@ INCLUDES = $(XCB_CFLAGS)
 LDADD = $(XCB_LIBS)
 
 bin_PROGRAMS = dpms hypnomoire rendertest xcb-test xcbrandr xcbxf86dri \
-               xcbxvinfo xdpyinfo
+               xcbxvinfo xcbdpyinfo
 
 hypnomoire_CFLAGS = $(XCBAUX_CFLAGS)
 hypnomoire_LDADD = $(XCBAUX_LIBS) -lm -lpthread
 hypnomoire_SOURCES = hypnomoire.c reply_formats.c
 
-xdpyinfo_SOURCES = xdpyinfo.c
+xcbdpyinfo_SOURCES = xcbdpyinfo.c
 
 xcb_test_CFLAGS = $(XCBAUX_CFLAGS)
 xcb_test_LDADD = $(XCBAUX_LIBS) -lpthread

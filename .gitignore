@@ -2,7 +2,7 @@ dpms
 hypnomoire
 rendertest
 xcb-test
+xcbdpyinfo
 xcbrandr
 xcbxf86dri
 xcbxvinfo
-xdpyinfo
