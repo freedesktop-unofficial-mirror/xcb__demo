@@ -4,8 +4,9 @@ dpms........: test of the dpms extension.
 hypnomoire..: test of threading support.
 rendertest..: test of the render extension.
 xcb-test....: test of the events on a window.
-xcbrandr....: test of the randr extension.
 xcbdpyinfo..: XCB port of the standard xdpyinfo.
+xcbrandr....: test of the randr extension.
+xcbxvinfo...: test of the xv extension.
 
 In tests/ :
 
