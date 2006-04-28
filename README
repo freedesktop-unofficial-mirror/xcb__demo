@@ -1,11 +1,15 @@
 xcb-demo: A collection of demo programs that use the XCB library.
 
 dpms........: test of the dpms extension.
-hypnomoire..: 
+hypnomoire..: test of threading support.
 rendertest..: test of the render extension.
 xcb-test....: test of the events on a window.
-xcbrandr....: test of the randr extension.
 xcbdpyinfo..: XCB port of the standard xdpyinfo.
+xcbrandr....: test of the randr extension.
+xcbxvinfo...: test of the xv extension.
+
+app/xte.....: test of the xtest extension.
+neko/.......: XCB port of xneko.
 
 In tests/ :
 
