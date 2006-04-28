@@ -8,6 +8,9 @@ xcbdpyinfo..: XCB port of the standard xdpyinfo.
 xcbrandr....: test of the randr extension.
 xcbxvinfo...: test of the xv extension.
 
+app/xte.....: test of the xtest extension.
+neko/.......: XCB port of xneko.
+
 In tests/ :
 
 julia.......: example of XCBImage use, with a colormap.
