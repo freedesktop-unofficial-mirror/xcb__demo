@@ -120,6 +120,10 @@ step (Data *datap)
       printf("FRAME COUNT..: %i frames\n", loop_count);
       printf("TIME.........: %3.3f seconds\n", t);
       printf("AVERAGE FPS..: %3.3f fps\n", (double)loop_count / t);
+      /* if datap->image is not NULL, this means that */
+      /* we are using the SHM mode */
+      if (datap->image)
+        XCBImageSHMDestroy (datap->image);
       XCBDisconnect (datap->conn);
       exit(0);
     }
@@ -145,7 +149,7 @@ shm_test (Data *datap)
       else
 	format = 0;
       datap->image = XCBImageSHMCreate (datap->conn, datap->depth,
-				      format, NULL, W_W, W_H);
+                                        format, NULL, W_W, W_H);
       assert(datap->image);
 
       shminfo.shmid = shmget (IPC_PRIVATE,
@@ -161,6 +165,7 @@ shm_test (Data *datap)
 		    shminfo.shmid, 0);
       shmctl_status = shmctl(shminfo.shmid, IPC_RMID, 0);
       assert(shmctl_status != -1);
+      free (rep);
     }
 
   if (datap->image)
