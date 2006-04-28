@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
         adaptors_rep = XCBXvQueryAdaptorsReply(c, XCBXvQueryAdaptors(c, root_window), NULL);
         if (!adaptors_rep->num_adaptors) {
             fprintf(stdout, " no adaptors present.\n");
+            free(adaptors_rep);
             continue;
         }
 
@@ -338,10 +339,8 @@ int main(int argc, char *argv[])
             free(qencodings_rep);
             XCBXvAdaptorInfoNext(&adaptors_iter);
         }
+        free(adaptors_rep);
     }
 
-    free(adaptors_rep);
-    adaptors_rep = NULL;
-
-    return 1;
+    return 0;
 }
