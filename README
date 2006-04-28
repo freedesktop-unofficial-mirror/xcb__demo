@@ -13,5 +13,6 @@ neko/.......: XCB port of xneko.
 
 In tests/ :
 
+flames......: example of XCBImage use
 julia.......: example of XCBImage use, with a colormap.
-lissajoux...: simple example of XCBImage use.
+lissajoux...: simple example of XCBImage and shared memory use.
