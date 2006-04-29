@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include <X11/X.h>
+#define X_H
 #include <X11/XCB/xcb.h>
 #include <X11/XCB/shm.h>
 #include <X11/XCB/xcb_aux.h>
@@ -106,13 +106,13 @@ flame_init ()
 
   f->xcb.draw.window = screen->root;
   f->xcb.gc = XCBGCONTEXTNew (f->xcb.c);
-  mask = GCForeground | GCGraphicsExposures;
+  mask = XCBGCForeground | XCBGCGraphicsExposures;
   values[0] = screen->black_pixel;
   values[1] = 0; /* no graphics exposures */
   XCBCreateGC (f->xcb.c, f->xcb.gc, f->xcb.draw, mask, values);
 
   gc = XCBGCONTEXTNew (f->xcb.c);
-  mask = GCForeground | GCGraphicsExposures;
+  mask = XCBGCForeground | XCBGCGraphicsExposures;
   values[0] = screen->white_pixel;
   values[1] = 0; /* no graphics exposures */
   XCBCreateGC (f->xcb.c, gc, f->xcb.draw, mask, values);
@@ -120,14 +120,14 @@ flame_init ()
   f->xcb.depth = XCBAuxGetDepth (f->xcb.c, screen);
   mask = XCBCWBackPixel | XCBCWEventMask;
   values[0] = screen->white_pixel;
-  values[1] = ExposureMask | ButtonPressMask;
+  values[1] = XCBEventMaskExposure | XCBEventMaskButtonPress;
   f->xcb.draw.window = XCBWINDOWNew (f->xcb.c);
   XCBCreateWindow (f->xcb.c, f->xcb.depth,
 		   f->xcb.draw.window,
 		   screen->root,
 		   0, 0, BG_W, BG_H,
 		   0,
-		   InputOutput,
+		   XCBWindowClassInputOutput,
 		   screen->root_visual,
 		   mask, values);
   title_set (f, "XCB Flames");
@@ -143,7 +143,7 @@ flame_init ()
 
   f->xcb.cmap = XCBCOLORMAPNew (f->xcb.c);
   XCBCreateColormap (f->xcb.c,
-		     AllocNone,
+		     XCBColormapAllocNone,
 		     f->xcb.cmap,
 		     f->xcb.draw.window,
 		     screen->root_visual);
@@ -263,7 +263,7 @@ static void title_set (flame *f, const char *title)
                                            strlen (atom_name),
                                            atom_name),
                             NULL);
-  XCBChangeProperty(f->xcb.c, PropModeReplace,
+  XCBChangeProperty(f->xcb.c, XCBPropModeReplace,
                     f->xcb.draw.window,
                     rep->atom, encoding, 8, strlen (title), title);
   free (rep);
@@ -291,7 +291,7 @@ flame_draw_flame (flame *f)
 
   image = XCBImageGet (f->xcb.c, f->xcb.draw,
 		       0, 0, BG_W, BG_H,
-		       ((unsigned long)~0L), ZPixmap);
+		       XCBAllPlanes, XCBImageFormatZPixmap);
   f->im = (unsigned int *)image->data;
 
   for (y = 0 ; y < ((BG_H >> 1) - 1) ; y++)
