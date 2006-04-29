@@ -8,7 +8,6 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-#include <X11/Xlib.h>
 #include <X11/XCB/xcb.h>
 #include <X11/XCB/shm.h>
 #include <X11/XCB/xcb_aux.h>
@@ -53,14 +52,14 @@ draw_lissajoux (Data *datap)
       i = XCBImageSHMGet (datap->conn, datap->draw,
 			  datap->image, shminfo,
 			  0, 0,
-			  AllPlanes);
+			  XCBAllPlanes);
       assert(i);
     }
   else
     {
       datap->image = XCBImageGet (datap->conn, datap->draw,
                                   0, 0, W_W, W_H,
-                                  AllPlanes, datap->format);
+                                  XCBAllPlanes, datap->format);
       assert(datap->image);
     }
   
@@ -221,13 +220,13 @@ main (int argc, char *argv[])
   win.window = screen->root;
 
   data.gc = XCBGCONTEXTNew (data.conn);
-  mask = GCForeground | GCGraphicsExposures;
+  mask = XCBGCForeground | XCBGCGraphicsExposures;
   valgc[0] = screen->black_pixel;
   valgc[1] = 0; /* no graphics exposures */
   XCBCreateGC (data.conn, data.gc, win, mask, valgc);
 
   bgcolor = XCBGCONTEXTNew (data.conn);
-  mask = GCForeground | GCGraphicsExposures;
+  mask = XCBGCForeground | XCBGCGraphicsExposures;
   valgc[0] = screen->white_pixel;
   valgc[1] = 0; /* no graphics exposures */
   XCBCreateGC (data.conn, bgcolor, win, mask, valgc);
@@ -235,14 +234,14 @@ main (int argc, char *argv[])
   data.draw.window = XCBWINDOWNew (data.conn);
   mask = XCBCWBackPixel | XCBCWEventMask | XCBCWDontPropagate;
   valwin[0] = screen->white_pixel;
-  valwin[1] = KeyPressMask | ButtonReleaseMask | ExposureMask;
-  valwin[2] = ButtonPressMask;
+  valwin[1] = XCBEventMaskKeyPress | XCBEventMaskButtonRelease | XCBEventMaskExposure;
+  valwin[2] = XCBEventMaskButtonPress;
   XCBCreateWindow (data.conn, 0,
 		   data.draw.window,
 		   screen->root,
 		   0, 0, W_W, W_H,
 		   10,
-		   InputOutput,
+		   XCBWindowClassInputOutput,
 		   screen->root_visual,
 		   mask, valwin);
   XCBMapWindow (data.conn, data.draw.window);
@@ -253,7 +252,7 @@ main (int argc, char *argv[])
 		   W_W, W_H);
   XCBPolyFillRectangle(data.conn, rect, bgcolor, 1, &rect_coord);
 
-  data.format = ZPixmap;
+  data.format = XCBImageFormatZPixmap;
   XCBSync (data.conn, 0); 
 
   if (try_shm)

@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <X11/Xlib.h>
 #include <X11/XCB/xcb.h>
 #include <X11/XCB/shm.h>
 #include <X11/XCB/xcb_aux.h>
@@ -86,7 +85,7 @@ draw_julia (Data *datap)
   
   datap->image = XCBImageGet (datap->conn, datap->draw,
 		       0, 0, W_W, W_H,
-		       AllPlanes, datap->format);
+		       XCBAllPlanes, datap->format);
   
   for (i = 0 ; i < datap->image->width ; i++)
     for (j = 0 ; j < datap->image->height ; j++)
@@ -133,13 +132,13 @@ main (int argc, char *argv[])
   win.window = screen->root;
 
   data.gc = XCBGCONTEXTNew (data.conn);
-  mask = GCForeground | GCGraphicsExposures;
+  mask = XCBGCForeground | XCBGCGraphicsExposures;
   valgc[0] = screen->black_pixel;
   valgc[1] = 0; /* no graphics exposures */
   XCBCreateGC (data.conn, data.gc, win, mask, valgc);
 
   bgcolor = XCBGCONTEXTNew (data.conn);
-  mask = GCForeground | GCGraphicsExposures;
+  mask = XCBGCForeground | XCBGCGraphicsExposures;
   valgc[0] = screen->white_pixel;
   valgc[1] = 0; /* no graphics exposures */
   XCBCreateGC (data.conn, bgcolor, win, mask, valgc);
@@ -147,14 +146,14 @@ main (int argc, char *argv[])
   data.draw.window = XCBWINDOWNew (data.conn);
   mask = XCBCWBackPixel | XCBCWEventMask | XCBCWDontPropagate;
   valwin[0] = screen->white_pixel;
-  valwin[1] = KeyReleaseMask | ButtonReleaseMask | ExposureMask;
-  valwin[2] = ButtonPressMask;
+  valwin[1] = XCBEventMaskKeyRelease | XCBEventMaskButtonRelease | XCBEventMaskExposure;
+  valwin[2] = XCBEventMaskButtonPress;
   XCBCreateWindow (data.conn, 0,
 		   data.draw.window,
 		   screen->root,
 		   0, 0, W_W, W_H,
 		   10,
-		   InputOutput,
+		   XCBWindowClassInputOutput,
 		   screen->root_visual,
 		   mask, valwin);
   XCBMapWindow (data.conn, data.draw.window);
@@ -167,11 +166,11 @@ main (int argc, char *argv[])
 
   XCBMapWindow (data.conn, data.draw.window);
 
-  data.format = ZPixmap;
+  data.format = XCBImageFormatZPixmap;
 
   data.cmap = XCBCOLORMAPNew (data.conn);
   XCBCreateColormap (data.conn,
-		     AllocNone,
+		     XCBColormapAllocNone,
 		     data.cmap,
 		     data.draw.window,
 		     screen->root_visual);
