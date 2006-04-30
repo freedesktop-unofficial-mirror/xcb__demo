@@ -143,8 +143,8 @@ static char  *ProgramName;
 
 XCBConnection	*xc;
 XCBSCREEN      *theScreen;		/* instead of macro(theDisplay, int theScreen) */
-unsigned long  theBlackPixel;
-unsigned long  theWhitePixel;
+unsigned long  theFgPixel;
+unsigned long  theBgPixel;
 XCBWINDOW         theWindow;
 XCBCURSOR         theCursor;
 XCBKeySymbols	*theKeySyms;
@@ -487,8 +487,8 @@ void  InitBitmapAndGCs(void) {
 
   theGCValues[0] = XCBGXcopy;
 
-  theGCValues[1] = theBlackPixel;
-  theGCValues[2] = theWhitePixel;
+  theGCValues[1] = theFgPixel;
+  theGCValues[2] = theBgPixel;
 
   theGCValues[3] = XCBFillStyleTiled;
   
@@ -503,7 +503,7 @@ void  InitBitmapAndGCs(void) {
 		BitmapGCDataTablePtr->PixelPattern,
 		BitmapGCDataTablePtr->PixelWidth,
 		BitmapGCDataTablePtr->PixelHeight,
-		theBlackPixel, theWhitePixel, theScreen->root_depth);
+		theFgPixel, theBgPixel, theScreen->root_depth);
 
 	theGCValues[4] = BitmapGCDataTablePtr->BitmapCreatePtr->xid; /* tile */
 	
@@ -591,6 +591,12 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 
   XCBAllocNamedColorCookie fgCookie = XCBAllocNamedColor ( xc,
 		theColormap,  strlen(fgColor), fgColor );
+
+  /* mouse cursor is always black and white */
+  XCBAllocNamedColorCookie blackCookie = XCBAllocNamedColor ( xc,
+		theColormap,  strlen("black"), "black" );
+  XCBAllocNamedColorCookie whiteCookie = XCBAllocNamedColor ( xc,
+		theColormap,  strlen("white"), "white" );
 		
   XCBAllocNamedColorRep *bgRep = XCBAllocNamedColorReply( xc, bgCookie, 0 );
   if (!bgRep) {
@@ -598,7 +604,7 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 			"%s: Can't allocate the background color %s.\n", ProgramName, bgColor );
 	exit( 1 );
   }
-  theWhitePixel = bgRep->pixel;
+  theBgPixel = bgRep->pixel;
 
   XCBAllocNamedColorRep *fgRep = XCBAllocNamedColorReply( xc, fgCookie, 0 );
   if (!fgRep) {
@@ -606,29 +612,59 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 			"%s: Can't allocate the foreground color %s.\n", ProgramName, fgColor );
 	exit( 1 );
   }
-  theBlackPixel = fgRep->pixel;
+  theFgPixel = fgRep->pixel;
+
+  XCBAllocNamedColorRep *blackRep = XCBAllocNamedColorReply( xc, blackCookie, 0 );
+  if (!blackRep) {
+	fprintf( stderr,
+			"%s: Can't allocate the black color.\n", ProgramName );
+	exit( 1 );
+  }
+  XCBAllocNamedColorRep *whiteRep = XCBAllocNamedColorReply( xc, whiteCookie, 0 );
+  if (!whiteRep) {
+	fprintf( stderr,
+			"%s: Can't allocate the white color.\n", ProgramName );
+	exit( 1 );
+  }
   
   theCursor = XCBCURSORNew( xc );
   XCBCreateCursor ( xc, theCursor, theCursorSource, theCursorMask,
-  	fgRep->visual_red, fgRep->visual_green, fgRep->visual_blue,
-  	bgRep->visual_red, bgRep->visual_green, bgRep->visual_blue,
+  	blackRep->visual_red, blackRep->visual_green, blackRep->visual_blue,
+  	whiteRep->visual_red, whiteRep->visual_green, whiteRep->visual_blue,
   	cursor_x_hot, cursor_y_hot );
 
   free(bgRep);
   free(fgRep);
+  free(blackRep);
+  free(whiteRep);
 
   if ( useRoot ) {
-    CARD32 rootAttributes[] = { EVENT_MASK_ROOT, theCursor.xid };
+    CARD32 rootAttributes[] = { theBgPixel, EVENT_MASK_ROOT, theCursor.xid };
 	theWindow = theScreen->root;
 	XCBChangeWindowAttributes(xc, theWindow,
-		XCBCWEventMask | XCBCWCursor, rootAttributes );
+		XCBCWBackPixel | XCBCWEventMask | XCBCWCursor, rootAttributes );
+	
+	/* XClearWindow: clear area with all dimensions 0 */
+	XCBClearArea( xc, False, theWindow, 0, 0, 0, 0 );
+	
+	XCBDRAWABLE d = { theWindow };
+	XCBGetGeometryRep *geometry = XCBGetGeometryReply( xc,
+	  XCBGetGeometry( xc, d ), NULL);
+	if (geometry) {
+	  /* only width & height are used by the program */
+	  WindowWidth  = geometry->width;
+	  WindowHeight = geometry->height;
+	  free(geometry);
+	}
+	
+	/* TODO: grab key Alt-Q to quit gracefully? */
   }
   else {
 	XCBPIXMAP                theIconPixmap;
 
 	CARD32 theWindowAttributes[] = {
-		theWhitePixel, /* background */
-		theBlackPixel, /* border */
+		theBgPixel,    /* background */
+		theFgPixel,    /* border */
 		False,         /* override_redirect */
 		EVENT_MASK,
 		theCursor.xid };
@@ -698,18 +734,6 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 
   }
   
-#ifdef TODO
-  /* is this really necessary? */
-  XSetWindowBackground( theDisplay, theWindow, theWhitePixel );
-  XClearWindow( theDisplay, theWindow );
-  XFlush( theDisplay );
-
-  XCBWINDOW		theRoot;
-  XGetGeometry( theDisplay, theWindow, &theRoot,
-			   &WindowPointX, &WindowPointY, &WindowWidth, &WindowHeight,
-			   &BorderWidth, &theDepth );
-#endif
-
   InitBitmapAndGCs();
 
   XCBFlush(xc);

@@ -1,6 +1,5 @@
 XCB TODO
 --------
-* -root needs testing (Mac X is rootless)
 * DEBUG not supported
 * -geometry not supported
 * -iconic not supported (don't like the util interfaces)
