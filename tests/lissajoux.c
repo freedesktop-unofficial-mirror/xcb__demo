@@ -110,7 +110,7 @@ step (Data *datap)
   loop_count++;
   t = get_time () - time_start;
 
-  if (t <= 20.0)
+  if (t <= 2.0)
     {
       draw_lissajoux (datap);
     }
@@ -119,9 +119,7 @@ step (Data *datap)
       printf("FRAME COUNT..: %i frames\n", loop_count);
       printf("TIME.........: %3.3f seconds\n", t);
       printf("AVERAGE FPS..: %3.3f fps\n", (double)loop_count / t);
-      /* if datap->image is not NULL, this means that */
-      /* we are using the SHM mode */
-      if (datap->image)
+      if (do_shm)
         XCBImageSHMDestroy (datap->image);
       XCBDisconnect (datap->conn);
       exit(0);
