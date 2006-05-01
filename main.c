@@ -211,7 +211,7 @@ int main(int argc, char **argv)
 #else
     wait_events(c);
 #endif
-
+    XCBDisconnect(c);
     exit(0);
     /*NOTREACHED*/
 }
