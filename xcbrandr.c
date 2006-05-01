@@ -446,6 +446,7 @@ main (int argc, char **argv)
   XRRFreeScreenConfigInfo(sc);
 #endif
   free(sc);
-  free(c);
+  free(rr_version);
+  XCBDisconnect(c);
   return(0);
 }
