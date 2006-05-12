@@ -19,7 +19,7 @@ xcbdpyinfo_SOURCES = xcbdpyinfo.c
 
 xcb_test_CFLAGS = $(XCBAUX_CFLAGS)
 xcb_test_LDADD = $(XCBAUX_LIBS) -lpthread
-xcb_test_SOURCES = main.c reply_formats.c reply_formats.h
+xcb_test_SOURCES = xcb-test.c reply_formats.c reply_formats.h
 
 dpms_CFLAGS = $(XCBDPMS_CFLAGS)
 dpms_LDADD = $(XCBDPMS_LIBS)
