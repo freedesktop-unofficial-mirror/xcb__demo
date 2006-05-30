@@ -251,7 +251,7 @@ main (int argc, char *argv[])
   XCBPolyFillRectangle(data.conn, rect, bgcolor, 1, &rect_coord);
 
   data.format = XCBImageFormatZPixmap;
-  XCBSync (data.conn, 0); 
+  XCBFlush (data.conn); 
 
   if (try_shm)
     shm_test (&data);
@@ -273,7 +273,6 @@ main (int argc, char *argv[])
 	    case XCBExpose:
 	      XCBCopyArea(data.conn, rect, data.draw, bgcolor,
 		          0, 0, 0, 0, W_W, W_H);
-	      XCBSync (data.conn, 0);
 	      break;
 	    }
 	  free (e);

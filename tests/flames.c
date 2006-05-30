@@ -139,7 +139,7 @@ flame_init ()
   XCBPolyFillRectangle(f->xcb.c, f->xcb.pixmap, gc, 1, &rect_coord);
 
   XCBMapWindow (f->xcb.c, f->xcb.draw.window);
-  XCBSync (f->xcb.c, 0);
+  XCBFlush (f->xcb.c);
 
   f->xcb.cmap = XCBCOLORMAPNew (f->xcb.c);
   XCBCreateColormap (f->xcb.c,
@@ -216,7 +216,7 @@ main ()
 	    case XCBExpose:
 	      XCBCopyArea(f->xcb.c, f->xcb.pixmap, f->xcb.draw, gc,
 		          0, 0, 0, 0, BG_W, BG_H);
-	      XCBSync (f->xcb.c, 0);
+	      XCBFlush (f->xcb.c);
 	      break;
             case XCBButtonPress:
               printf ("Exiting...\n");

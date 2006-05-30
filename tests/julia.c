@@ -177,7 +177,7 @@ main (int argc, char *argv[])
 
   palette_julia (&data);
 
-  XCBSync (data.conn, 0); 
+  XCBFlush (data.conn); 
 
   while ((e = XCBWaitForEvent(data.conn)))
     {
@@ -188,7 +188,7 @@ main (int argc, char *argv[])
 	    XCBCopyArea(data.conn, rect, data.draw, bgcolor,
 			0, 0, 0, 0, W_W, W_H);
 	    draw_julia (&data);
-	    XCBSync (data.conn, 0);
+	    XCBFlush (data.conn);
 	    break;
 	  }
 	case XCBKeyRelease:

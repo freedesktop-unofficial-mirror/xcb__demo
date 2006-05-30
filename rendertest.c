@@ -398,7 +398,7 @@ int draw_window(XCBConnection *conn, XCBRenderQueryPictFormatsRep *reply)
     XCBRenderFreePicture(conn, root_picture);
    
     /* sync up and leave the function */
-    XCBSync(conn, 0);
+    XCBFlush(conn);
     return 0;
 }
 

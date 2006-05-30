@@ -95,6 +95,7 @@ void paint(int idx)
 {
 	XCBCopyArea(c, windows[idx].p, windows[idx].w, white, 0, 0, 0, 0,
 		windows[idx].width, windows[idx].height);
+	/* TODO: better error detection for broken pipe */
 	if(!XCBSync(c, 0))
 	{
 		perror("XCBSync failed");
@@ -149,7 +150,7 @@ void *run(void *param)
 		XCBPolyFillRectangle(c, windows[idx].p, white, 1, &rect);
 	}
 
-	XCBSync(c, 0);
+	XCBFlush(c);
 
 	while(1)
 	{
