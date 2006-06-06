@@ -226,7 +226,7 @@ main ()
 	  free (e);
         }
       flame_draw_flame (f);
-      XCBSync (f->xcb.c, 0);
+      XCBFlush (f->xcb.c);
     }
 
  sortie:
