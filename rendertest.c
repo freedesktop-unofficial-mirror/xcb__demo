@@ -120,7 +120,7 @@ int draw_window(XCBConnection *conn, XCBRenderQueryPictFormatsRep *reply)
     XCBRECTANGLE       pict_rect[1], window_rect;
     XCBRenderCOLOR           pict_color[4], back_color, alpha_color;
     XCBSCREEN          *root;
-    XCBRenderTRAP            traps[4];
+    XCBRenderTRAPEZOID       traps[4];
     XCBRenderTRIANGLE        triangles[4];
     XCBRenderPOINTFIX        tristrips[9];
     XCBRenderPOINTFIX        trifans[9];
