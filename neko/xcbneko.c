@@ -690,30 +690,19 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 
 	theIconPixmap = CreateBitmapFromData( xc, theWindow,
 										  icon_bits, icon_width, icon_height );
-#ifdef TODO_ICCCM
-	theWMHints.icon_pixmap = theIconPixmap;
-	
-	if ( iconicState )
-	  theWMHints.initial_state = IconicState;
-	else
-	  theWMHints.initial_state = NormalState;
-	
-	theWMHints.flags = IconPixmapHint | StateHint;
-	
-	XSetWMHints( theDisplay, theWindow, &theWMHints );
-#else
-    /* Um... there is no function to send the hints...
-	WMHints              theWMHints;
-	WMHintsSetIconPixmap( &theHints, theIconPixmap );
+
+	WMHints *theWMHints = AllocWMHints();
+
+	WMHintsSetIconPixmap( theWMHints, theIconPixmap );
 
 	if ( iconicState )
-	  WMHintsSetIconic( &theHints );
+	  WMHintsSetIconic( theWMHints );
 	else
-	  WMHintsSetNormal( &theHints );
-	  
-	Now what?
-    */
-#endif
+	  WMHintsSetNormal( theWMHints );
+	
+	SetWMHints( xc, theWindow, theWMHints);
+	
+	free( theWMHints );
 
 	/* why hide the structure? */
 	SizeHints *theSizeHints = AllocSizeHints();
