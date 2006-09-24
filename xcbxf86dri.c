@@ -9,11 +9,11 @@
 int main(int argc, char **argv)
 {
     int screen;
-    XCBXF86DriQueryVersionCookie qvc;
-    XCBXF86DriQueryVersionRep *qv;
-    XCBXF86DriQueryDirectRenderingCapableCookie qdrc;
-    XCBXF86DriQueryDirectRenderingCapableRep *qdr;
-    XCBConnection *c = XCBConnect(NULL, &screen);
+    xcb_xf86dri_query_version_cookie_t qvc;
+    xcb_xf86dri_query_version_reply_t *qv;
+    xcb_xf86dri_query_direct_rendering_capable_cookie_t qdrc;
+    xcb_xf86dri_query_direct_rendering_capable_reply_t *qdr;
+    xcb_connection_t *c = xcb_connect(NULL, &screen);
 
     if(!c)
     {
@@ -21,10 +21,10 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    qvc  = XCBXF86DriQueryVersion(c);
-    qdrc = XCBXF86DriQueryDirectRenderingCapable(c, screen);
+    qvc  = xcb_xf86dri_query_version(c);
+    qdrc = xcb_xf86dri_query_direct_rendering_capable(c, screen);
 
-    qv  = XCBXF86DriQueryVersionReply(c, qvc, 0);
+    qv  = xcb_xf86dri_query_version_reply(c, qvc, 0);
     if(!qv)
     {
         fprintf(stderr, "Error querying DRI extension version.\n");
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
            qv->dri_major_version, qv->dri_minor_version, qv->dri_minor_patch);
     free(qv);
 
-    qdr = XCBXF86DriQueryDirectRenderingCapableReply(c, qdrc, 0);
+    qdr = xcb_xf86dri_query_direct_rendering_capable_reply(c, qdrc, 0);
     if(!qdr)
     {
         fprintf(stderr, "Error querying direct rendering capability.\n");
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
            screen, qdr->is_capable ? "yes" : "no");
     free(qdr);
 
-    XCBDisconnect(c);
+    xcb_disconnect(c);
 
     return 0;
 }

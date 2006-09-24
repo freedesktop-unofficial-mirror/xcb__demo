@@ -41,28 +41,28 @@ int cmax = 316;
 void
 palette_julia (Data *datap)
 {
-  XCBAllocColorRep *rep;
+  xcb_alloc_color_reply_t *rep;
   int               i;
 
-  datap->palette = (CARD32 *)malloc (sizeof (CARD32) * cmax);
+  datap->palette = (uint32_t *)malloc (sizeof (uint32_t) * cmax);
   
   for (i = 0 ; i < cmax ; i++)
     {
       if (i < 128)
-	rep = XCBAllocColorReply (datap->conn,
-				  XCBAllocColor (datap->conn,
+	rep = xcb_alloc_color_reply (datap->conn,
+				  xcb_alloc_color (datap->conn,
 						 datap->cmap,
 						 i<<9, 0, 0),
 				  0);
       else if (i < 255)
-	rep = XCBAllocColorReply (datap->conn,
-				  XCBAllocColor (datap->conn,
+	rep = xcb_alloc_color_reply (datap->conn,
+				  xcb_alloc_color (datap->conn,
 						 datap->cmap,
 						 65535, (i-127)<<9, 0),
 				  0);
       else
-	rep = XCBAllocColorReply (datap->conn,
-				  XCBAllocColor (datap->conn,
+	rep = xcb_alloc_color_reply (datap->conn,
+				  xcb_alloc_color (datap->conn,
 						 datap->cmap,
 						 65535, 65535, (i-255)<<10),
 				  0);
@@ -83,9 +83,9 @@ draw_julia (Data *datap)
   int       c;
   int       i, j;
   
-  datap->image = XCBImageGet (datap->conn, datap->draw,
+  datap->image = xcb_image_get (datap->conn, datap->draw,
 		       0, 0, W_W, W_H,
-		       XCBAllPlanes, datap->format);
+		       XCB_ALL_PLANES, datap->format);
   
   for (i = 0 ; i < datap->image->width ; i++)
     for (j = 0 ; j < datap->image->height ; j++)
@@ -101,12 +101,12 @@ draw_julia (Data *datap)
 	    zi = 2.0*t*zi + ci;
 	    c++;
 	  }
-	XCBImagePutPixel (datap->image,
+	xcb_image_put_pixel (datap->image,
 			  i,j,
 			  datap->palette[c]);
       }
 
-  XCBImagePut (datap->conn, datap->draw, datap->gc, datap->image,
+  xcb_image_put (datap->conn, datap->draw, datap->gc, datap->image,
 	       0, 0, 0, 0, W_W, W_H);
 }
 
@@ -114,92 +114,92 @@ int
 main (int argc, char *argv[])
 {
   Data             data;
-  XCBSCREEN       *screen;
-  XCBDRAWABLE      win;
-  XCBDRAWABLE      rect;
-  XCBGCONTEXT      bgcolor;
-  CARD32           mask;
-  CARD32           valgc[2];
-  CARD32           valwin[3];
-  XCBRECTANGLE     rect_coord = { 0, 0, W_W, W_H};
-  XCBGenericEvent *e;
+  xcb_screen_t       *screen;
+  xcb_drawable_t      win;
+  xcb_drawable_t      rect;
+  xcb_gcontext_t      bgcolor;
+  uint32_t           mask;
+  uint32_t           valgc[2];
+  uint32_t           valwin[3];
+  xcb_rectangle_t     rect_coord = { 0, 0, W_W, W_H};
+  xcb_generic_event_t *e;
   int              screen_num;
   
-  data.conn = XCBConnect (0, &screen_num);
-  screen = XCBAuxGetScreen (data.conn, screen_num);
-  data.depth = XCBAuxGetDepth (data.conn, screen);
+  data.conn = xcb_connect (0, &screen_num);
+  screen = xcb_aux_get_screen (data.conn, screen_num);
+  data.depth = xcb_aux_get_depth (data.conn, screen);
 
   win.window = screen->root;
 
-  data.gc = XCBGCONTEXTNew (data.conn);
-  mask = XCBGCForeground | XCBGCGraphicsExposures;
+  data.gc = xcb_gcontext_new (data.conn);
+  mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
   valgc[0] = screen->black_pixel;
   valgc[1] = 0; /* no graphics exposures */
-  XCBCreateGC (data.conn, data.gc, win, mask, valgc);
+  xcb_create_gc (data.conn, data.gc, win, mask, valgc);
 
-  bgcolor = XCBGCONTEXTNew (data.conn);
-  mask = XCBGCForeground | XCBGCGraphicsExposures;
+  bgcolor = xcb_gcontext_new (data.conn);
+  mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
   valgc[0] = screen->white_pixel;
   valgc[1] = 0; /* no graphics exposures */
-  XCBCreateGC (data.conn, bgcolor, win, mask, valgc);
+  xcb_create_gc (data.conn, bgcolor, win, mask, valgc);
 
-  data.draw.window = XCBWINDOWNew (data.conn);
-  mask = XCBCWBackPixel | XCBCWEventMask | XCBCWDontPropagate;
+  data.draw.window = xcb_window_new (data.conn);
+  mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_DONT_PROPAGATE;
   valwin[0] = screen->white_pixel;
-  valwin[1] = XCBEventMaskKeyRelease | XCBEventMaskButtonRelease | XCBEventMaskExposure;
-  valwin[2] = XCBEventMaskButtonPress;
-  XCBCreateWindow (data.conn, 0,
+  valwin[1] = XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_EXPOSURE;
+  valwin[2] = XCB_EVENT_MASK_BUTTON_PRESS;
+  xcb_create_window (data.conn, 0,
 		   data.draw.window,
 		   screen->root,
 		   0, 0, W_W, W_H,
 		   10,
-		   XCBWindowClassInputOutput,
+		   XCB_WINDOW_CLASS_INPUT_OUTPUT,
 		   screen->root_visual,
 		   mask, valwin);
-  XCBMapWindow (data.conn, data.draw.window);
+  xcb_map_window (data.conn, data.draw.window);
 
-  rect.pixmap = XCBPIXMAPNew (data.conn);
-  XCBCreatePixmap (data.conn, data.depth,
+  rect.pixmap = xcb_pixmap_new (data.conn);
+  xcb_create_pixmap (data.conn, data.depth,
 		   rect.pixmap, data.draw,
 		   W_W, W_H);
-  XCBPolyFillRectangle(data.conn, rect, bgcolor, 1, &rect_coord);
+  xcb_poly_fill_rectangle(data.conn, rect, bgcolor, 1, &rect_coord);
 
-  XCBMapWindow (data.conn, data.draw.window);
+  xcb_map_window (data.conn, data.draw.window);
 
-  data.format = XCBImageFormatZPixmap;
+  data.format = XCB_IMAGE_FORMAT_Z_PIXMAP;
 
-  data.cmap = XCBCOLORMAPNew (data.conn);
-  XCBCreateColormap (data.conn,
-		     XCBColormapAllocNone,
+  data.cmap = xcb_colormap_new (data.conn);
+  xcb_create_colormap (data.conn,
+		     XCB_COLORMAP_ALLOC_NONE,
 		     data.cmap,
 		     data.draw.window,
 		     screen->root_visual);
 
   palette_julia (&data);
 
-  XCBFlush (data.conn); 
+  xcb_flush (data.conn); 
 
-  while ((e = XCBWaitForEvent(data.conn)))
+  while ((e = xcb_wait_for_event(data.conn)))
     {
       switch (e->response_type)
 	{
-	case XCBExpose:
+	case XCB_EXPOSE:
 	  {
-	    XCBCopyArea(data.conn, rect, data.draw, bgcolor,
+	    xcb_copy_area(data.conn, rect, data.draw, bgcolor,
 			0, 0, 0, 0, W_W, W_H);
 	    draw_julia (&data);
-	    XCBFlush (data.conn);
+	    xcb_flush (data.conn);
 	    break;
 	  }
-	case XCBKeyRelease:
-	case XCBButtonRelease:
+	case XCB_KEY_RELEASE:
+	case XCB_BUTTON_RELEASE:
 	  {
             if (data.palette)
               free (data.palette);
             if (data.image)
-              XCBImageDestroy (data.image);
+              xcb_image_destroy (data.image);
             free (e);
-            XCBDisconnect (data.conn);
+            xcb_disconnect (data.conn);
             exit (0);
 	    break;
 	  }

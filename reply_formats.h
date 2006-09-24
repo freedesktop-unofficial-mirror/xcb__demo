@@ -9,9 +9,9 @@
 
 #include <X11/XCB/xcb.h>
 
-int formatGetWindowAttributesReply(XCBWINDOW wid, XCBGetWindowAttributesRep *reply);
-int formatGetGeometryReply(XCBWINDOW wid, XCBGetGeometryRep *reply);
-int formatQueryTreeReply(XCBWINDOW wid, XCBQueryTreeRep *reply);
-int formatEvent(XCBGenericEvent *e);
+int formatGetWindowAttributesReply(xcb_window_t wid, xcb_get_window_attributes_reply_t *reply);
+int formatGetGeometryReply(xcb_window_t wid, xcb_get_geometry_reply_t *reply);
+int formatQueryTreeReply(xcb_window_t wid, xcb_query_tree_reply_t *reply);
+int formatEvent(xcb_generic_event_t *e);
 
 #endif /* REPLY_FORMATS_H */

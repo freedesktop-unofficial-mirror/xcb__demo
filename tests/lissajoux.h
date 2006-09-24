@@ -5,12 +5,12 @@ typedef struct Data_ Data;
 
 struct Data_
 {
-  XCBConnection *conn;
-  CARD8          depth;
-  XCBDRAWABLE    draw;
-  XCBGCONTEXT    gc;
-  CARD8          format;
-  XCBImage      *image;
+  xcb_connection_t *conn;
+  uint8_t          depth;
+  xcb_drawable_t    draw;
+  xcb_gcontext_t    gc;
+  uint8_t          format;
+  xcb_image_t      *image;
 };
 
 #endif /* __TEST_H__ */

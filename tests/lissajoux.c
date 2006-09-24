@@ -27,7 +27,7 @@ int    do_shm = 0;
 double tab_cos[3600];
 double tab_sin[3600];
 
-XCBShmSegmentInfo shminfo;
+xcb_shm_segment_info_t shminfo;
 
 double
 get_time(void)
@@ -49,17 +49,17 @@ draw_lissajoux (Data *datap)
   
   if (do_shm)
     { 
-      i = XCBImageSHMGet (datap->conn, datap->draw,
+      i = xcb_image_shm_get (datap->conn, datap->draw,
 			  datap->image, shminfo,
 			  0, 0,
-			  XCBAllPlanes);
+			  XCB_ALL_PLANES);
       assert(i);
     }
   else
     {
-      datap->image = XCBImageGet (datap->conn, datap->draw,
+      datap->image = xcb_image_get (datap->conn, datap->draw,
                                   0, 0, W_W, W_H,
-                                  XCBAllPlanes, datap->format);
+                                  XCB_ALL_PLANES, datap->format);
       assert(datap->image);
     }
   
@@ -75,7 +75,7 @@ draw_lissajoux (Data *datap)
       {
 	x = tab_cos[(int)(a1*i + p1*nbr) % 3600];
 	y = tab_sin[(int)(a2*i + p2*nbr) % 3600];
-	XCBImagePutPixel (datap->image,
+	xcb_image_put_pixel (datap->image,
 			  (int)((double)(W_W-5)*(x+1)/2.0),
 			  (int)((double)(W_H-5)*(y+1)/2.0), 65535);
       }
@@ -87,20 +87,20 @@ draw_lissajoux (Data *datap)
       {
 	x = tab_cos[(int)(a1*i + p1*nbr) % 3600];
 	y = tab_sin[(int)(a2*i + p2*nbr) % 3600];
-	XCBImagePutPixel (datap->image,
+	xcb_image_put_pixel (datap->image,
 			  (int)((double)(W_W-5)*(x+1)/2.0),
 			  (int)((double)(W_H-5)*(y+1)/2.0), 0);
       }
 
   if (do_shm)
-    XCBImageSHMPut (datap->conn, datap->draw, datap->gc,
+    xcb_image_shm_put (datap->conn, datap->draw, datap->gc,
 		    datap->image, shminfo,
 		    0, 0, 0, 0, W_W, W_H, 0);
   else
     {
-      XCBImagePut (datap->conn, datap->draw, datap->gc, datap->image,
+      xcb_image_put (datap->conn, datap->draw, datap->gc, datap->image,
                    0, 0, 0, 0, W_W, W_H);
-      XCBImageDestroy (datap->image);
+      xcb_image_destroy (datap->image);
     }
 }
 
@@ -120,8 +120,8 @@ step (Data *datap)
       printf("TIME.........: %3.3f seconds\n", t);
       printf("AVERAGE FPS..: %3.3f fps\n", (double)loop_count / t);
       if (do_shm)
-        XCBImageSHMDestroy (datap->image);
-      XCBDisconnect (datap->conn);
+        xcb_image_shm_destroy (datap->image);
+      xcb_disconnect (datap->conn);
       exit(0);
     }
 }
@@ -130,14 +130,14 @@ step (Data *datap)
 void
 shm_test (Data *datap)
 {
-  XCBShmQueryVersionRep *rep;
+  xcb_shm_query_version_reply_t *rep;
 
-  rep = XCBShmQueryVersionReply (datap->conn,
-				 XCBShmQueryVersion (datap->conn),
+  rep = xcb_shm_query_version_reply (datap->conn,
+				 xcb_shm_query_version (datap->conn),
 				 NULL);
   if (rep)
     {
-      CARD8 format;
+      uint8_t format;
       int shmctl_status;
       
       if (rep->shared_pixmaps && 
@@ -145,7 +145,7 @@ shm_test (Data *datap)
 	format = rep->pixmap_format;
       else
 	format = 0;
-      datap->image = XCBImageSHMCreate (datap->conn, datap->depth,
+      datap->image = xcb_image_shm_create (datap->conn, datap->depth,
                                         format, NULL, W_W, W_H);
       assert(datap->image);
 
@@ -157,8 +157,8 @@ shm_test (Data *datap)
       assert(shminfo.shmaddr);
       datap->image->data = shminfo.shmaddr;
 
-      shminfo.shmseg = XCBShmSEGNew (datap->conn);
-      XCBShmAttach (datap->conn, shminfo.shmseg,
+      shminfo.shmseg = xcb_shm_seg_new (datap->conn);
+      xcb_shm_attach (datap->conn, shminfo.shmseg,
 		    shminfo.shmid, 0);
       shmctl_status = shmctl(shminfo.shmid, IPC_RMID, 0);
       assert(shmctl_status != -1);
@@ -183,15 +183,15 @@ int
 main (int argc, char *argv[])
 {
   Data             data;
-  XCBSCREEN       *screen;
-  XCBDRAWABLE      win;
-  XCBDRAWABLE      rect;
-  XCBGCONTEXT      bgcolor;
-  CARD32           mask;
-  CARD32           valgc[2];
-  CARD32           valwin[3];
-  XCBRECTANGLE     rect_coord = { 0, 0, W_W, W_H};
-  XCBGenericEvent *e;
+  xcb_screen_t       *screen;
+  xcb_drawable_t      win;
+  xcb_drawable_t      rect;
+  xcb_gcontext_t      bgcolor;
+  uint32_t           mask;
+  uint32_t           valgc[2];
+  uint32_t           valwin[3];
+  xcb_rectangle_t     rect_coord = { 0, 0, W_W, W_H};
+  xcb_generic_event_t *e;
   int              try_shm;
   int              screen_num;
   int              i;
@@ -211,47 +211,47 @@ main (int argc, char *argv[])
   if (try_shm != 0)
     try_shm = 1;
 
-  data.conn = XCBConnect (0, &screen_num);
-  screen = XCBAuxGetScreen(data.conn, screen_num);
-  data.depth = XCBAuxGetDepth (data.conn, screen);
+  data.conn = xcb_connect (0, &screen_num);
+  screen = xcb_aux_get_screen(data.conn, screen_num);
+  data.depth = xcb_aux_get_depth (data.conn, screen);
 
   win.window = screen->root;
 
-  data.gc = XCBGCONTEXTNew (data.conn);
-  mask = XCBGCForeground | XCBGCGraphicsExposures;
+  data.gc = xcb_gcontext_new (data.conn);
+  mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
   valgc[0] = screen->black_pixel;
   valgc[1] = 0; /* no graphics exposures */
-  XCBCreateGC (data.conn, data.gc, win, mask, valgc);
+  xcb_create_gc (data.conn, data.gc, win, mask, valgc);
 
-  bgcolor = XCBGCONTEXTNew (data.conn);
-  mask = XCBGCForeground | XCBGCGraphicsExposures;
+  bgcolor = xcb_gcontext_new (data.conn);
+  mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
   valgc[0] = screen->white_pixel;
   valgc[1] = 0; /* no graphics exposures */
-  XCBCreateGC (data.conn, bgcolor, win, mask, valgc);
+  xcb_create_gc (data.conn, bgcolor, win, mask, valgc);
 
-  data.draw.window = XCBWINDOWNew (data.conn);
-  mask = XCBCWBackPixel | XCBCWEventMask | XCBCWDontPropagate;
+  data.draw.window = xcb_window_new (data.conn);
+  mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_DONT_PROPAGATE;
   valwin[0] = screen->white_pixel;
-  valwin[1] = XCBEventMaskKeyPress | XCBEventMaskButtonRelease | XCBEventMaskExposure;
-  valwin[2] = XCBEventMaskButtonPress;
-  XCBCreateWindow (data.conn, 0,
+  valwin[1] = XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_EXPOSURE;
+  valwin[2] = XCB_EVENT_MASK_BUTTON_PRESS;
+  xcb_create_window (data.conn, 0,
 		   data.draw.window,
 		   screen->root,
 		   0, 0, W_W, W_H,
 		   10,
-		   XCBWindowClassInputOutput,
+		   XCB_WINDOW_CLASS_INPUT_OUTPUT,
 		   screen->root_visual,
 		   mask, valwin);
-  XCBMapWindow (data.conn, data.draw.window);
+  xcb_map_window (data.conn, data.draw.window);
 
-  rect.pixmap = XCBPIXMAPNew (data.conn);
-  XCBCreatePixmap (data.conn, data.depth,
+  rect.pixmap = xcb_pixmap_new (data.conn);
+  xcb_create_pixmap (data.conn, data.depth,
 		   rect.pixmap, data.draw,
 		   W_W, W_H);
-  XCBPolyFillRectangle(data.conn, rect, bgcolor, 1, &rect_coord);
+  xcb_poly_fill_rectangle(data.conn, rect, bgcolor, 1, &rect_coord);
 
-  data.format = XCBImageFormatZPixmap;
-  XCBFlush (data.conn); 
+  data.format = XCB_IMAGE_FORMAT_Z_PIXMAP;
+  xcb_flush (data.conn); 
 
   if (try_shm)
     shm_test (&data);
@@ -265,20 +265,20 @@ main (int argc, char *argv[])
   t_previous = 0.0;
   while (1)
     {
-      e = XCBPollForEvent(data.conn, NULL);
+      e = xcb_poll_for_event(data.conn, NULL);
       if (e)
 	{
 	  switch (e->response_type)
 	    {
-	    case XCBExpose:
-	      XCBCopyArea(data.conn, rect, data.draw, bgcolor,
+	    case XCB_EXPOSE:
+	      xcb_copy_area(data.conn, rect, data.draw, bgcolor,
 		          0, 0, 0, 0, W_W, W_H);
 	      break;
 	    }
 	  free (e);
         }
       step (&data);
-      XCBFlush (data.conn);
+      xcb_flush (data.conn);
       t_previous = t;
     }
   /*NOTREACHED*/

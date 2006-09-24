@@ -49,12 +49,12 @@ typedef struct
 {
   struct
   {
-    XCBConnection *c;
-    XCBDRAWABLE    draw;
-    XCBDRAWABLE    pixmap;
-    XCBCOLORMAP    cmap;
-    CARD8          depth;
-    XCBGCONTEXT    gc;
+    xcb_connection_t *c;
+    xcb_drawable_t    draw;
+    xcb_drawable_t    pixmap;
+    xcb_colormap_t    cmap;
+    uint8_t          depth;
+    xcb_gcontext_t    gc;
   }xcb;
   
   /* the palette */
@@ -82,68 +82,68 @@ flame *
 flame_init ()
 {
   flame       *f;
-  XCBSCREEN   *screen;
-  XCBGCONTEXT  gc = { 0 };
+  xcb_screen_t   *screen;
+  xcb_gcontext_t  gc = { 0 };
   int          screen_nbr;
-  CARD32       mask;
-  CARD32       values[2];
+  uint32_t       mask;
+  uint32_t       values[2];
   int          size;
   int          flame_width;
   int          flame_height;
-  XCBRECTANGLE rect_coord = { 0, 0, BG_W, BG_H};
+  xcb_rectangle_t rect_coord = { 0, 0, BG_W, BG_H};
 
   f = (flame *)malloc (sizeof (flame));
   if (!f)
     return NULL;
 
-  f->xcb.c = XCBConnect (NULL, &screen_nbr);
+  f->xcb.c = xcb_connect (NULL, &screen_nbr);
   if (!f->xcb.c)
     {
       free (f);
       return NULL;
     }
-  screen = XCBAuxGetScreen (f->xcb.c, screen_nbr);
+  screen = xcb_aux_get_screen (f->xcb.c, screen_nbr);
 
   f->xcb.draw.window = screen->root;
-  f->xcb.gc = XCBGCONTEXTNew (f->xcb.c);
-  mask = XCBGCForeground | XCBGCGraphicsExposures;
+  f->xcb.gc = xcb_gcontext_new (f->xcb.c);
+  mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
   values[0] = screen->black_pixel;
   values[1] = 0; /* no graphics exposures */
-  XCBCreateGC (f->xcb.c, f->xcb.gc, f->xcb.draw, mask, values);
+  xcb_create_gc (f->xcb.c, f->xcb.gc, f->xcb.draw, mask, values);
 
-  gc = XCBGCONTEXTNew (f->xcb.c);
-  mask = XCBGCForeground | XCBGCGraphicsExposures;
+  gc = xcb_gcontext_new (f->xcb.c);
+  mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
   values[0] = screen->white_pixel;
   values[1] = 0; /* no graphics exposures */
-  XCBCreateGC (f->xcb.c, gc, f->xcb.draw, mask, values);
+  xcb_create_gc (f->xcb.c, gc, f->xcb.draw, mask, values);
 
-  f->xcb.depth = XCBAuxGetDepth (f->xcb.c, screen);
-  mask = XCBCWBackPixel | XCBCWEventMask;
+  f->xcb.depth = xcb_aux_get_depth (f->xcb.c, screen);
+  mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
   values[0] = screen->white_pixel;
-  values[1] = XCBEventMaskExposure | XCBEventMaskButtonPress;
-  f->xcb.draw.window = XCBWINDOWNew (f->xcb.c);
-  XCBCreateWindow (f->xcb.c, f->xcb.depth,
+  values[1] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS;
+  f->xcb.draw.window = xcb_window_new (f->xcb.c);
+  xcb_create_window (f->xcb.c, f->xcb.depth,
 		   f->xcb.draw.window,
 		   screen->root,
 		   0, 0, BG_W, BG_H,
 		   0,
-		   XCBWindowClassInputOutput,
+		   XCB_WINDOW_CLASS_INPUT_OUTPUT,
 		   screen->root_visual,
 		   mask, values);
   title_set (f, "XCB Flames");
   
-  f->xcb.pixmap.pixmap = XCBPIXMAPNew (f->xcb.c);
-  XCBCreatePixmap (f->xcb.c, f->xcb.depth,
+  f->xcb.pixmap.pixmap = xcb_pixmap_new (f->xcb.c);
+  xcb_create_pixmap (f->xcb.c, f->xcb.depth,
 		   f->xcb.pixmap.pixmap, f->xcb.draw,
 		   BG_W, BG_H);
-  XCBPolyFillRectangle(f->xcb.c, f->xcb.pixmap, gc, 1, &rect_coord);
+  xcb_poly_fill_rectangle(f->xcb.c, f->xcb.pixmap, gc, 1, &rect_coord);
 
-  XCBMapWindow (f->xcb.c, f->xcb.draw.window);
-  XCBFlush (f->xcb.c);
+  xcb_map_window (f->xcb.c, f->xcb.draw.window);
+  xcb_flush (f->xcb.c);
 
-  f->xcb.cmap = XCBCOLORMAPNew (f->xcb.c);
-  XCBCreateColormap (f->xcb.c,
-		     XCBColormapAllocNone,
+  f->xcb.cmap = xcb_colormap_new (f->xcb.c);
+  xcb_create_colormap (f->xcb.c,
+		     XCB_COLORMAP_ALLOC_NONE,
 		     f->xcb.cmap,
 		     f->xcb.draw.window,
 		     screen->root_visual);
@@ -156,7 +156,7 @@ flame_init ()
   f->flame = (unsigned int *)malloc (size);
   if (! f->flame)
     {
-      XCBDisconnect (f->xcb.c);
+      xcb_disconnect (f->xcb.c);
       free (f);
       return NULL;
     }
@@ -164,7 +164,7 @@ flame_init ()
   if (! f->flame2)
     {
       free (f->flame);
-      XCBDisconnect (f->xcb.c);
+      xcb_disconnect (f->xcb.c);
       free (f);
       return NULL;
     }
@@ -186,7 +186,7 @@ flame_shutdown (flame *f)
 
   free (f->flame2);
   free (f->flame);
-  XCBDisconnect (f->xcb.c);
+  xcb_disconnect (f->xcb.c);
   free (f);
 }
 
@@ -194,8 +194,8 @@ int
 main ()
 {
   flame *f;
-  XCBGenericEvent *e;
-  XCBGCONTEXT gc = { 0 };
+  xcb_generic_event_t *e;
+  xcb_gcontext_t gc = { 0 };
 
   f = flame_init ();
   if (!f)
@@ -209,16 +209,16 @@ main ()
 
   while (1)
     {
-      if ((e = XCBPollForEvent (f->xcb.c, NULL)))
+      if ((e = xcb_poll_for_event (f->xcb.c, NULL)))
 	{
 	  switch (e->response_type)
 	    {
-	    case XCBExpose:
-	      XCBCopyArea(f->xcb.c, f->xcb.pixmap, f->xcb.draw, gc,
+	    case XCB_EXPOSE:
+	      xcb_copy_area(f->xcb.c, f->xcb.pixmap, f->xcb.draw, gc,
 		          0, 0, 0, 0, BG_W, BG_H);
-	      XCBFlush (f->xcb.c);
+	      xcb_flush (f->xcb.c);
 	      break;
-            case XCBButtonPress:
+            case XCB_BUTTON_PRESS:
               printf ("Exiting...\n");
               free (e);
               goto sortie;
@@ -226,7 +226,7 @@ main ()
 	  free (e);
         }
       flame_draw_flame (f);
-      XCBFlush (f->xcb.c);
+      xcb_flush (f->xcb.c);
     }
 
  sortie:
@@ -237,14 +237,14 @@ main ()
 
 static void title_set (flame *f, const char *title)
 {
-  XCBInternAtomRep *rep;
-  XCBATOM           encoding;
+  xcb_intern_atom_reply_t *rep;
+  xcb_atom_t           encoding;
   char             *atom_name;
 
   /* encoding */
   atom_name = "UTF8_STRING";
-  rep = XCBInternAtomReply (f->xcb.c,
-                            XCBInternAtom (f->xcb.c,
+  rep = xcb_intern_atom_reply (f->xcb.c,
+                            xcb_intern_atom (f->xcb.c,
                                            0,
                                            strlen (atom_name),
                                            atom_name),
@@ -257,13 +257,13 @@ static void title_set (flame *f, const char *title)
 
   /* NETWM */
   atom_name = "_NET_WM_NAME";
-  rep = XCBInternAtomReply (f->xcb.c,
-                            XCBInternAtom (f->xcb.c,
+  rep = xcb_intern_atom_reply (f->xcb.c,
+                            xcb_intern_atom (f->xcb.c,
                                            0,
                                            strlen (atom_name),
                                            atom_name),
                             NULL);
-  XCBChangeProperty(f->xcb.c, XCBPropModeReplace,
+  xcb_change_property(f->xcb.c, XCB_PROP_MODE_REPLACE,
                     f->xcb.draw.window,
                     rep->atom, encoding, 8, strlen (title), title);
   free (rep);
@@ -272,7 +272,7 @@ static void title_set (flame *f, const char *title)
 static void
 flame_draw_flame (flame *f)
 {
-  XCBImage     *image;
+  xcb_image_t     *image;
   unsigned int *ptr;
   int           x;
   int           y;
@@ -289,9 +289,9 @@ flame_draw_flame (flame *f)
   /* process the flame array, propagating the flames up the array */
   flame_process_flame (f);
 
-  image = XCBImageGet (f->xcb.c, f->xcb.draw,
+  image = xcb_image_get (f->xcb.c, f->xcb.draw,
 		       0, 0, BG_W, BG_H,
-		       XCBAllPlanes, XCBImageFormatZPixmap);
+		       XCB_ALL_PLANES, XCB_IMAGE_FORMAT_Z_PIXMAP);
   f->im = (unsigned int *)image->data;
 
   for (y = 0 ; y < ((BG_H >> 1) - 1) ; y++)
@@ -311,31 +311,31 @@ flame_draw_flame (flame *f)
 	  cl4 = (int)*ptr;
 
           
-          XCBImagePutPixel (image,
+          xcb_image_put_pixel (image,
                             xx, yy,
                             f->pal[cl]);
-          XCBImagePutPixel (image,
+          xcb_image_put_pixel (image,
                             xx + 1, yy,
                             f->pal[((cl1+cl2) >> 1)]);
-          XCBImagePutPixel (image,
+          xcb_image_put_pixel (image,
                             xx, yy + 1,
                             f->pal[((cl1 + cl3) >> 1)]);
-          XCBImagePutPixel (image,
+          xcb_image_put_pixel (image,
                             xx + 1, yy + 1,
                             f->pal[((cl1 + cl4) >> 1)]);
 	}
     }
-  XCBImagePut (f->xcb.c, f->xcb.draw, f->xcb.gc, image,
+  xcb_image_put (f->xcb.c, f->xcb.draw, f->xcb.gc, image,
 	       0, 0, 0, 0, BG_W, BG_H);
-  XCBImageDestroy (image);
+  xcb_image_destroy (image);
 }
 
 /* set the flame palette */
 static void
 flame_set_palette (flame *f)
 {
-  XCBAllocColorCookie cookies[IMAX];
-  XCBAllocColorRep *rep;
+  xcb_alloc_color_cookie_t cookies[IMAX];
+  xcb_alloc_color_reply_t *rep;
   int               i;
   int               r;
   int               g;
@@ -354,13 +354,13 @@ flame_set_palette (flame *f)
       if (b < 0)   b = 0;
       if (b > 255) b = 255;
 
-      cookies[i] = XCBAllocColor (f->xcb.c, f->xcb.cmap,
+      cookies[i] = xcb_alloc_color (f->xcb.c, f->xcb.cmap,
                                   r << 8, g << 8, b << 8);
     }
 
   for (i = 0 ; i < IMAX ; i++)
     {
-      rep = XCBAllocColorReply (f->xcb.c, cookies[i], NULL);
+      rep = xcb_alloc_color_reply (f->xcb.c, cookies[i], NULL);
       f->pal[i] = rep->pixel;
       free (rep);
     }

@@ -85,18 +85,18 @@ usage(void)
  * Would be nice to put in another library or something.
  */
 short*
-ConfigRates(XCBRandRGetScreenInfoRep *config, int sizeID, int *nrates)
+ConfigRates(xcb_randr_get_screen_info_reply_t *config, int sizeID, int *nrates)
 {
     int i = 0;
     short *ents;
-    XCBRandRRefreshRatesIter ri = XCBRandRGetScreenInfoRatesIter(config);
+    xcb_randr_refresh_rates_iterator_t ri = xcb_randr_get_screen_info_rates_iterator(config);
     
     while (i++ < sizeID) {
-	XCBRandRRefreshRatesNext(&ri);
+	xcb_randr_refresh_rates_next(&ri);
     }
     
-    ents = (short *)XCBRandRRefreshRatesRates(ri.data);
-    *nrates = XCBRandRRefreshRatesRatesLength(ri.data);
+    ents = (short *)xcb_randr_refresh_rates_rates(ri.data);
+    *nrates = xcb_randr_refresh_rates_rates_length(ri.data);
     
     if (!nrates) {
 	*nrates = 0;
@@ -109,19 +109,19 @@ ConfigRates(XCBRandRGetScreenInfoRep *config, int sizeID, int *nrates)
 int
 main (int argc, char **argv)
 {
-  XCBConnection  *c;
-  XCBRandRScreenSize *sizes;
-  XCBRandRGetScreenInfoRep *sc;
+  xcb_connection_t  *c;
+  xcb_randr_screen_size_t *sizes;
+  xcb_randr_get_screen_info_reply_t *sc;
   int		nsize;
   int		nrate;
   short		*rates;
-  XCBSCREEN	*root;
-  int		status = XCBRandRSetConfigFailed;
+  xcb_screen_t	*root;
+  int		status = XCB_RANDR_SET_CONFIG_FAILED;
   int		rot = -1;
   int		verbose = 0, query = 0;
   short		rotation, current_rotation, rotations;
-  XCBGenericEvent *event;
-  XCBRandRScreenChangeNotifyEvent *sce;
+  xcb_generic_event_t *event;
+  xcb_randr_screen_change_notify_event_t *sce;
   char          *display_name = NULL;
   int 		i, j;
   int		current_size;
@@ -136,12 +136,12 @@ main (int argc, char **argv)
   short		reflection = 0;
   int		width = 0, height = 0;
   int		have_pixel_size = 0;
-  XCBGenericError *err;
-  CARD16 mask = (CARD16) XCBEventMaskStructureNotify;
-  CARD32 values[1];
-  XCBRandRGetScreenInfoCookie scookie;
+  xcb_generic_error_t *err;
+  uint16_t mask = (uint16_t) XCB_EVENT_MASK_STRUCTURE_NOTIFY;
+  uint32_t values[1];
+  xcb_randr_get_screen_info_cookie_t scookie;
   int major_version, minor_version;
-  XCBRandRQueryVersionRep *rr_version;
+  xcb_randr_query_version_reply_t *rr_version;
 
   program_name = argv[0];
   if (argc == 1) query = 1;
@@ -186,12 +186,12 @@ main (int argc, char **argv)
     }
 
     if (!strcmp ("-x", argv[i])) {
-      reflection |= XCBRandRRotationReflect_X;
+      reflection |= XCB_RANDR_ROTATION_REFLECT_X;
       setit = 1;
       continue;
     }
     if (!strcmp ("-y", argv[i])) {
-      reflection |= XCBRandRRotationReflect_Y;
+      reflection |= XCB_RANDR_ROTATION_REFLECT_Y;
       setit = 1;
       continue;
     }
@@ -231,13 +231,13 @@ main (int argc, char **argv)
       fprintf (stderr, "No display available\n");
       exit (1);
   }
-  c = XCBConnect(display_name, &screen);
+  c = xcb_connect(display_name, &screen);
   if (!c) {
       fprintf (stderr, "Can't open display %s\n", display_name);
       exit (1);
   }
-  root = XCBAuxGetScreen(c, screen);
-  rr_version = XCBRandRQueryVersionReply(c, XCBRandRQueryVersion(c, 1, 1), 0);
+  root = xcb_aux_get_screen(c, screen);
+  rr_version = xcb_randr_query_version_reply(c, xcb_randr_query_version(c, 1, 1), 0);
   if (!rr_version) {
       fprintf(stderr, "Can't get VersionReply.\n");
       exit (1);
@@ -245,8 +245,8 @@ main (int argc, char **argv)
   major_version = rr_version->major_version;
   minor_version = rr_version->minor_version;
 
-  scookie = XCBRandRGetScreenInfo(c, root->root);
-  sc = XCBRandRGetScreenInfoReply(c, scookie, 0);
+  scookie = xcb_randr_get_screen_info(c, root->root);
+  sc = xcb_randr_get_screen_info_reply(c, scookie, 0);
   if (!sc) {
 	fprintf(stderr, "Can't get ScreenInfo.\n");
 	exit (1);
@@ -256,7 +256,7 @@ main (int argc, char **argv)
   current_size = sc->sizeID;
   
   nsize = sc->nSizes;
-  sizes = XCBRandRGetScreenInfoSizes(sc);
+  sizes = xcb_randr_get_screen_info_sizes(sc);
 
   if (have_pixel_size) {
     for (size = 0; size < nsize; size++)
@@ -324,10 +324,10 @@ main (int argc, char **argv)
     }
 
     printf("Current reflection - ");
-    if (current_rotation & (XCBRandRRotationReflect_X|XCBRandRRotationReflect_Y))
+    if (current_rotation & (XCB_RANDR_ROTATION_REFLECT_X|XCB_RANDR_ROTATION_REFLECT_Y))
     {
-	if (current_rotation & XCBRandRRotationReflect_X) printf ("X Axis ");
-	if (current_rotation & XCBRandRRotationReflect_Y) printf ("Y Axis");
+	if (current_rotation & XCB_RANDR_ROTATION_REFLECT_X) printf ("X Axis ");
+	if (current_rotation & XCB_RANDR_ROTATION_REFLECT_Y) printf ("Y Axis");
     }
     else
 	printf ("none");
@@ -341,10 +341,10 @@ main (int argc, char **argv)
     printf ("\n");
 
     printf ("Reflections possible - ");
-    if (rotations & (XCBRandRRotationReflect_X|XCBRandRRotationReflect_Y))
+    if (rotations & (XCB_RANDR_ROTATION_REFLECT_X|XCB_RANDR_ROTATION_REFLECT_Y))
     {
-        if (rotations & XCBRandRRotationReflect_X) printf ("X Axis ");
-	if (rotations & XCBRandRRotationReflect_Y) printf ("Y Axis");
+        if (rotations & XCB_RANDR_ROTATION_REFLECT_X) printf ("X Axis ");
+	if (rotations & XCB_RANDR_ROTATION_REFLECT_Y) printf ("Y Axis");
     }
     else
 	printf ("none");
@@ -357,30 +357,30 @@ main (int argc, char **argv)
     printf ("Setting reflection on ");
     if (reflection)
     {
-	if (reflection & XCBRandRRotationReflect_X) printf ("X Axis ");
-	if (reflection & XCBRandRRotationReflect_Y) printf ("Y Axis");
+	if (reflection & XCB_RANDR_ROTATION_REFLECT_X) printf ("X Axis ");
+	if (reflection & XCB_RANDR_ROTATION_REFLECT_Y) printf ("Y Axis");
     }
     else
 	printf ("neither axis");
     printf ("\n");
 
-    if (reflection & XCBRandRRotationReflect_X) printf("Setting reflection on X axis\n");
+    if (reflection & XCB_RANDR_ROTATION_REFLECT_X) printf("Setting reflection on X axis\n");
 
-    if (reflection & XCBRandRRotationReflect_Y) printf("Setting reflection on Y axis\n");
+    if (reflection & XCB_RANDR_ROTATION_REFLECT_Y) printf("Setting reflection on Y axis\n");
   }
 
   /* we should test configureNotify on the root window */
   values[0] = 1;
-  XCBConfigureWindow(c, root->root, mask, values);
+  xcb_configure_window(c, root->root, mask, values);
 
-  if (setit) XCBRandRSelectInput (c, root->root, XCBRandRSMScreenChangeNotify);
+  if (setit) xcb_randr_select_input (c, root->root, XCB_RANDR_SM_SCREEN_CHANGE_NOTIFY);
 
   if (setit) {
-    XCBRandRSetScreenConfigCookie sscc;
-    XCBRandRSetScreenConfigRep *config;
-    sscc = XCBRandRSetScreenConfig(c, root->root, CurrentTime, sc->config_timestamp, size,
+    xcb_randr_set_screen_config_cookie_t sscc;
+    xcb_randr_set_screen_config_reply_t *config;
+    sscc = xcb_randr_set_screen_config(c, root->root, CurrentTime, sc->config_timestamp, size,
 	    (short) (rotation | reflection), rate);
-    config = XCBRandRSetScreenConfigReply(c, sscc, &err);
+    config = xcb_randr_set_screen_config_reply(c, sscc, &err);
     if (!config) {
 	fprintf(stderr, "Can't set the screen. Error Code: %i Status:%i\n",
 		err->error_code, status);
@@ -389,16 +389,17 @@ main (int argc, char **argv)
     status = config->status;
   }
     
-  const XCBQueryExtensionRep *qrre_rep = XCBRandRInit(c);
+  const xcb_query_extension_reply_t *qrre_rep;
+  qrre_rep = xcb_get_extension_data(c, &xcb_randr_id);
   event_base = qrre_rep->first_event;
   error_base = qrre_rep->first_error;
   
   if (verbose && setit) {
-    if (status == XCBRandRSetConfigSuccess)
+    if (status == XCB_RANDR_SET_CONFIG_SUCCESS)
       {
 	while (1) {
 	int spo;
-	event = XCBWaitForEvent(c);
+	event = xcb_wait_for_event(c);
 	
 	printf ("Event received, type = %d\n", event->response_type);
 #if 0
@@ -410,8 +411,8 @@ main (int argc, char **argv)
 #endif
 	
 	switch (event->response_type - event_base) {
-	case XCBRandRScreenChangeNotify:
-	  sce = (XCBRandRScreenChangeNotifyEvent *) event;
+	case XCB_RANDR_SCREEN_CHANGE_NOTIFY:
+	  sce = (xcb_randr_screen_change_notify_event_t *) event;
 
 	  printf("Got a screen change notify event!\n");
 	  printf(" window = %d\n root = %d\n size_index = %d\n rotation %d\n", 
@@ -434,7 +435,7 @@ main (int argc, char **argv)
 	  else printf ("new Subpixel rendering model is %s\n", order[spo]);
 	  break;
 	default:
-	  if (event->response_type == XCBConfigureNotify)
+	  if (event->response_type == XCB_CONFIGURE_NOTIFY)
 	    printf("Received ConfigureNotify Event!\n");
           else
 	    printf("unknown event received, type = %d!\n", event->response_type);
@@ -447,6 +448,6 @@ main (int argc, char **argv)
 #endif
   free(sc);
   free(rr_version);
-  XCBDisconnect(c);
+  xcb_disconnect(c);
   return(0);
 }

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-XCBConnection *c;
+xcb_connection_t *c;
 
 void print_setup();
 void print_formats();
@@ -11,14 +11,14 @@ void list_extensions(void (*)(int, char *));
 void print_extension(int, char *);
 void query_extension(int, char *);
 void list_screens();
-void print_screen(XCBSCREEN *s);
+void print_screen(xcb_screen_t *s);
 
 int main(int argc, char **argv)
 {
     void (*ext_printer)(int, char *) = print_extension;
     int screen;
 
-    c = XCBConnect(0, &screen);
+    c = xcb_connect(0, &screen);
     if(!c)
     {
 	fputs("Connect failed.\n", stderr);
@@ -37,32 +37,32 @@ int main(int argc, char **argv)
     list_screens();
     fputs("\n", stdout);
 
-    XCBDisconnect(c);
+    xcb_disconnect(c);
 
     exit(0);
 }
 
 void print_setup()
 {
-    printf("version number:    %d.%d", XCBGetSetup(c)->protocol_major_version, XCBGetSetup(c)->protocol_minor_version);
+    printf("version number:    %d.%d", xcb_get_setup(c)->protocol_major_version, xcb_get_setup(c)->protocol_minor_version);
     fputs("\n" "vendor string:    ", stdout);
-    fwrite(XCBSetupVendor(XCBGetSetup(c)), 1, XCBSetupVendorLength(XCBGetSetup(c)), stdout);
-    printf("\n" "vendor release number:    %d", (int) XCBGetSetup(c)->release_number);
+    fwrite(xcb_setup_vendor(xcb_get_setup(c)), 1, xcb_setup_vendor_length(xcb_get_setup(c)), stdout);
+    printf("\n" "vendor release number:    %d", (int) xcb_get_setup(c)->release_number);
     /* "\n" "XFree86 version: %d.%d.%d.%d" */
-    printf("\n" "maximum request size:  %d bytes", XCBGetSetup(c)->maximum_request_length * 4);
-    printf("\n" "motion buffer size:  %d", (int)XCBGetSetup(c)->motion_buffer_size);
-    printf("\n" "bitmap unit, bit order, padding:    %d, %s, %d", XCBGetSetup(c)->bitmap_format_scanline_unit, (XCBGetSetup(c)->bitmap_format_bit_order == XCBImageOrderLSBFirst) ? "LSBFirst" : "MSBFirst", XCBGetSetup(c)->bitmap_format_scanline_pad);
-    printf("\n" "image byte order:    %s", (XCBGetSetup(c)->image_byte_order == XCBImageOrderLSBFirst) ? "LSBFirst" : "MSBFirst");
+    printf("\n" "maximum request size:  %d bytes", xcb_get_setup(c)->maximum_request_length * 4);
+    printf("\n" "motion buffer size:  %d", (int)xcb_get_setup(c)->motion_buffer_size);
+    printf("\n" "bitmap unit, bit order, padding:    %d, %s, %d", xcb_get_setup(c)->bitmap_format_scanline_unit, (xcb_get_setup(c)->bitmap_format_bit_order == XCB_IMAGE_ORDER_LSB_FIRST) ? "LSBFirst" : "MSBFirst", xcb_get_setup(c)->bitmap_format_scanline_pad);
+    printf("\n" "image byte order:    %s", (xcb_get_setup(c)->image_byte_order == XCB_IMAGE_ORDER_LSB_FIRST) ? "LSBFirst" : "MSBFirst");
 
     print_formats();
 
-    printf("\n" "keycode range:    minimum %d, maximum %d", XCBGetSetup(c)->min_keycode.id, XCBGetSetup(c)->max_keycode.id);
+    printf("\n" "keycode range:    minimum %d, maximum %d", xcb_get_setup(c)->min_keycode.id, xcb_get_setup(c)->max_keycode.id);
 }
 
 void print_formats()
 {
-    int i = XCBSetupPixmapFormatsLength(XCBGetSetup(c));
-    XCBFORMAT *p = XCBSetupPixmapFormats(XCBGetSetup(c));
+    int i = xcb_setup_pixmap_formats_length(xcb_get_setup(c));
+    xcb_format_t *p = xcb_setup_pixmap_formats(xcb_get_setup(c));
     printf("\n" "number of supported pixmap formats:    %d", i);
     fputs("\n" "supported pixmap formats:", stdout);
     for(--i; i >= 0; --i, ++p)
@@ -71,22 +71,22 @@ void print_formats()
 
 void list_extensions(void (*ext_printer)(int, char *))
 {
-    XCBListExtensionsRep *r;
-    XCBSTRIter i;
+    xcb_list_extensions_reply_t *r;
+    xcb_str_iterator_t i;
 
-    r = XCBListExtensionsReply(c, XCBListExtensions(c), 0);
+    r = xcb_list_extensions_reply(c, xcb_list_extensions(c), 0);
     if(!r)
     {
 	fputs("ListExtensions failed.\n", stderr);
 	return;
     }
 
-    i = XCBListExtensionsNamesIter(r);
+    i = xcb_list_extensions_names_iterator(r);
     printf("\n" "number of extensions:    %d", i.rem);
-    for(; i.rem; XCBSTRNext(&i))
+    for(; i.rem; xcb_str_next(&i))
     {
 	fputs("\n" "    ", stdout);
-	ext_printer(XCBSTRNameLength(i.data), XCBSTRName(i.data));
+	ext_printer(xcb_str_name_length(i.data), xcb_str_name(i.data));
     }
     free(r);
 }
@@ -98,10 +98,10 @@ void print_extension(int len, char *name)
 
 void query_extension(int len, char *name)
 {
-    XCBQueryExtensionRep *r;
+    xcb_query_extension_reply_t *r;
     int comma = 0;
 
-    r = XCBQueryExtensionReply(c, XCBQueryExtension(c, len, name), 0);
+    r = xcb_query_extension_reply(c, xcb_query_extension(c, len, name), 0);
     if(!r)
     {
 	fputs("QueryExtension failed.\n", stderr);
@@ -133,19 +133,19 @@ void query_extension(int len, char *name)
 
 void list_screens()
 {
-    XCBSCREENIter i;
+    xcb_screen_iterator_t i;
     int cur;
 
-    i = XCBSetupRootsIter(XCBGetSetup(c));
+    i = xcb_setup_roots_iterator(xcb_get_setup(c));
     printf("\n" "number of screens:    %d" "\n", i.rem);
-    for(cur = 1; i.rem; XCBSCREENNext(&i), ++cur)
+    for(cur = 1; i.rem; xcb_screen_next(&i), ++cur)
     {
 	printf("\n" "screen #%d:", cur);
 	print_screen(i.data);
     }
 }
 
-void print_screen(XCBSCREEN *s)
+void print_screen(xcb_screen_t *s)
 {
     printf("\n" "  dimensions:    %dx%d pixels (%dx%d millimeters)", s->width_in_pixels, s->height_in_pixels, s->width_in_millimeters, s->height_in_millimeters);
 }

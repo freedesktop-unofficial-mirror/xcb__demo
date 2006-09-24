@@ -46,11 +46,11 @@
 
 #define XK_Shift_L                       0xffe1  /* Left shift */
 
-XCBKeySymbols *syms = NULL;
+xcb_key_symbols_t *syms = NULL;
 
-BYTE thing_to_keycode( XCBConnection *c, char *thing ) {
-  XCBKEYCODE kc;
-  XCBKEYSYM ks;
+uint8_t thing_to_keycode( xcb_connection_t *c, char *thing ) {
+  xcb_keycode_t kc;
+  xcb_keysym_t ks;
   
 #if 0   /* There is no XCB equivalent to XStringToKeysym */
   ks = XStringToKeysym( thing );
@@ -60,10 +60,10 @@ BYTE thing_to_keycode( XCBConnection *c, char *thing ) {
   }
 #else
   /* For now, assume thing[0] == Latin-1 keysym */
-  ks.id = (BYTE)thing[0];
+  ks.id = (uint8_t)thing[0];
 #endif  
 
-  kc = XCBKeySymbolsGetKeycode( syms, ks );
+  kc = xcb_key_symbols_get_keycode( syms, ks );
 
   dmsg( 1, "String '%s' maps to keysym '%d'\n", thing, ks );
   dmsg( 1, "String '%s' maps to keycode '%d'\n", thing, kc );
@@ -71,30 +71,30 @@ BYTE thing_to_keycode( XCBConnection *c, char *thing ) {
   return( kc.id );
 }
 
-/* XCBTestFakeInput(type,detail,time,window,x,y,device) */
+/* xcb_test_fake_input(type,detail,time,window,x,y,device) */
 
 static void
-fake_input(XCBConnection *c, BYTE type, BYTE detail)
+fake_input(xcb_connection_t *c, uint8_t type, uint8_t detail)
 {
-  XCBWINDOW none = { XCBNone };
+  xcb_window_t none = { XCB_NONE };
 
-  XCBTestFakeInput( c, type, detail, 0, none, 0, 0, 0 );
+  xcb_test_fake_input( c, type, detail, 0, none, 0, 0, 0 );
 }
 
 static void
-fake_motion(XCBConnection *c, BOOL relative, CARD16 x, CARD16 y)
+fake_motion(xcb_connection_t *c, uint8_t relative, uint16_t x, uint16_t y)
 {
-  XCBWINDOW window = { XCBNone };
+  xcb_window_t window = { XCB_NONE };
 
   if (!relative) {
-    window = XCBSetupRootsIter(XCBGetSetup(c)).data->root;
+    window = xcb_setup_roots_iterator(xcb_get_setup(c)).data->root;
   }
-  XCBTestFakeInput( c, XCBMotionNotify, relative, 0, window, x, y, 0 );
+  xcb_test_fake_input( c, XCB_MOTION_NOTIFY, relative, 0, window, x, y, 0 );
 }
 
-void send_key( XCBConnection *c, char *thing ) {
-  static XCBKEYSYM shift = { XK_Shift_L };
-  BYTE code, wrap_code = 0;
+void send_key( xcb_connection_t *c, char *thing ) {
+  static xcb_keysym_t shift = { XK_Shift_L };
+  uint8_t code, wrap_code = 0;
 
   dmsg( 1, "Sending key '%s'\n", thing );
 
@@ -105,7 +105,7 @@ void send_key( XCBConnection *c, char *thing ) {
     if( strcmp( thing, problems[ probidx ] ) == 0 ) {
       /*wrap_key = problems[ probidx + 1 ]; */
       if (problems[ probidx + 1 ] != NULL) {
-        wrap_code = XCBKeySymbolsGetKeycode( syms, shift ).id;
+        wrap_code = xcb_key_symbols_get_keycode( syms, shift ).id;
       }
       thing = problems[ probidx + 2 ];
       break;
@@ -117,39 +117,39 @@ void send_key( XCBConnection *c, char *thing ) {
   const char *cap = "~!@#$%^&*()_+{}|:\"<>?";
   
   if (thing[0] >= 'A' && thing[0] <= 'Z')
-    wrap_code = XCBKeySymbolsGetKeycode( syms, shift ).id;
+    wrap_code = xcb_key_symbols_get_keycode( syms, shift ).id;
   else if (strchr(cap, thing[0]) != NULL)
-    wrap_code = XCBKeySymbolsGetKeycode( syms, shift ).id;
+    wrap_code = xcb_key_symbols_get_keycode( syms, shift ).id;
 #endif
   code = thing_to_keycode( c, thing );
 
   if( wrap_code )
-    fake_input( c, XCBKeyPress, wrap_code );
+    fake_input( c, XCB_KEY_PRESS, wrap_code );
 
-  fake_input( c, XCBKeyPress, code );
-  fake_input( c, XCBKeyRelease, code );
+  fake_input( c, XCB_KEY_PRESS, code );
+  fake_input( c, XCB_KEY_RELEASE, code );
 
   if( wrap_code )
-    fake_input( c, XCBKeyRelease, wrap_code );
+    fake_input( c, XCB_KEY_RELEASE, wrap_code );
 }
 
-void mouse_click( XCBConnection *c, int button ) {
+void mouse_click( xcb_connection_t *c, int button ) {
   dmsg( 1, "Clicking mouse button %d\n", button );
-  fake_input( c, XCBButtonPress, button );
-  fake_input( c, XCBButtonRelease, button );
+  fake_input( c, XCB_BUTTON_PRESS, button );
+  fake_input( c, XCB_BUTTON_RELEASE, button );
 }
 
-void mouse_move( XCBConnection *c, int x, int y ) {
+void mouse_move( xcb_connection_t *c, int x, int y ) {
   dmsg( 1, "Moving mouse to %c,%d\n", x, y );
   fake_motion( c, 0, x, y );
 }
 
-void mouse_rel_move( XCBConnection *c, int x, int y ) {
+void mouse_rel_move( xcb_connection_t *c, int x, int y ) {
   dmsg( 1, "Moving mouse relatively by %c,%d\n", x, y );
   fake_motion( c, 1, x, y );
 }
 
-void process_command( XCBConnection *c, const char *cmd ) {
+void process_command( xcb_connection_t *c, const char *cmd ) {
   /* Process a command */
   int tmpx,tmpy;
   char str[ 128 ];
@@ -164,10 +164,10 @@ void process_command( XCBConnection *c, const char *cmd ) {
     send_key( c, str );
   }else if( IS_CMD( cmd, "keydown " ) ) {
     strncpy( str, &cmd[ 8 ], 128 );
-    fake_input( c, XCBKeyPress, thing_to_keycode( c, str ) );
+    fake_input( c, XCB_KEY_PRESS, thing_to_keycode( c, str ) );
   }else if( IS_CMD( cmd, "keyup " ) ) {
     strncpy( str, &cmd[ 6 ], 128 );
-    fake_input( c, XCBKeyRelease, thing_to_keycode( c, str ) );
+    fake_input( c, XCB_KEY_RELEASE, thing_to_keycode( c, str ) );
   }else if( IS_CMD( cmd, "mousemove " ) ) {
     sscanf( cmd, "mousemove %d %d", &tmpx, &tmpy );
     mouse_move( c, tmpx, tmpy );
@@ -185,11 +185,11 @@ void process_command( XCBConnection *c, const char *cmd ) {
   }else if( IS_CMD( cmd, "mousedown " ) ) {
     sscanf( cmd, "mousedown %d", &tmpx );
     tmpx = tmpx<1 ? 1 : (tmpx>5 ? 5 : tmpx);
-    fake_input( c, XCBButtonPress, tmpx );
+    fake_input( c, XCB_BUTTON_PRESS, tmpx );
   }else if( IS_CMD( cmd, "mouseup " ) ) {
     sscanf( cmd, "mouseup %d", &tmpx );
     tmpx = tmpx<1 ? 1 : (tmpx>5 ? 5 : tmpx);
-    fake_input( c, XCBButtonRelease, tmpx );
+    fake_input( c, XCB_BUTTON_RELEASE, tmpx );
   }else if( IS_CMD( cmd, "str " ) ) {
     cmd += 4;
     while( cmd[ 0 ] != 0 ) {
@@ -199,29 +199,29 @@ void process_command( XCBConnection *c, const char *cmd ) {
     }
   /* in the absence of XStringToKeysym, allow sending hex syms directly */
   }else if( IS_CMD( cmd, "sym " ) ) {
-    XCBKEYSYM sym;
-    XCBKEYCODE code;
+    xcb_keysym_t sym;
+    xcb_keycode_t code;
     sscanf( str, "sym %x", &sym.id );
-    code = XCBKeySymbolsGetKeycode( syms, sym );
-    fake_input( c, XCBKeyPress, code.id );
-    fake_input( c, XCBKeyRelease, code.id );
+    code = xcb_key_symbols_get_keycode( syms, sym );
+    fake_input( c, XCB_KEY_PRESS, code.id );
+    fake_input( c, XCB_KEY_RELEASE, code.id );
   }else if( IS_CMD( cmd, "symdown " ) ) {
-    XCBKEYSYM sym;
+    xcb_keysym_t sym;
     sscanf( str, "symdown %x", &sym.id );
-    fake_input( c, XCBKeyPress, XCBKeySymbolsGetKeycode( syms, sym ).id );
+    fake_input( c, XCB_KEY_PRESS, xcb_key_symbols_get_keycode( syms, sym ).id );
   }else if( IS_CMD( cmd, "symup " ) ) {
-    XCBKEYSYM sym;
+    xcb_keysym_t sym;
     sscanf( str, "symup %x", &sym.id );
-    fake_input( c, XCBKeyRelease, XCBKeySymbolsGetKeycode( syms, sym ).id );
+    fake_input( c, XCB_KEY_RELEASE, xcb_key_symbols_get_keycode( syms, sym ).id );
   }else{
     fprintf( stderr, "Unknown command '%s'\n", cmd );
   }
 
-  XCBFlush( c );
+  xcb_flush( c );
 }
 
 int main( int argc, char *argv[] ) {
-  XCBConnection *c = NULL;
+  xcb_connection_t *c = NULL;
   int cnt;  /*, tmp_i; */
   char *buf, *display = NULL;
   int opt;
@@ -310,19 +310,19 @@ int main( int argc, char *argv[] ) {
     }
   }
 
-  c = XCBConnect( display, NULL );
+  c = xcb_connect( display, NULL );
   if( c == NULL ) {
     fprintf( stderr, "Unable to open display '%s'\n", display == NULL ? "default" : display );
     exit( 1 );
   }
   
   /* do XTest init and version check (need 2.1) */
-  /* XCBTestInit( c );   required? none of the other extension demos do this */
+  /* xcb_test_init( c );   required? none of the other extension demos do this */
   
-  XCBTestGetVersionCookie cookie = XCBTestGetVersion( c, 2, 1 );
+  xcb_test_get_version_cookie_t cookie = xcb_test_get_version( c, 2, 1 );
 
-  XCBGenericError *e = NULL;
-  XCBTestGetVersionRep *xtest_reply = XCBTestGetVersionReply ( c, cookie, &e );
+  xcb_generic_error_t *e = NULL;
+  xcb_test_get_version_reply_t *xtest_reply = xcb_test_get_version_reply ( c, cookie, &e );
   if (xtest_reply) {
     fprintf( stderr, "XTest version %u.%u\n",
       (unsigned int)xtest_reply->major_version,
@@ -336,7 +336,7 @@ int main( int argc, char *argv[] ) {
   
   
   /* prep for keysym-->keycode conversion */
-  syms = XCBKeySymbolsAlloc( c );
+  syms = xcb_key_symbols_alloc( c );
 
   if( argc - optind >= 1 ) {
     /* Arg mode */
@@ -352,8 +352,8 @@ int main( int argc, char *argv[] ) {
     }
   }
   
-  XCBKeySymbolsFree( syms );
+  xcb_key_symbols_free( syms );
 
-  XCBDisconnect( c );
+  xcb_disconnect( c );
   exit( 0 );
 }

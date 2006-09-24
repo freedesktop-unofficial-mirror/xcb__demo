@@ -12,23 +12,23 @@
 
 int main(int argc, char **argv)
 {
-	XCBConnection *c = XCBConnect(0, 0);
-	XCBDPMSGetVersionCookie vc;
-	XCBDPMSGetVersionRep *ver;
-	XCBDPMSCapableCookie cc;
-	XCBDPMSCapableRep *cap;
-	XCBDPMSGetTimeoutsCookie tc;
-	XCBDPMSGetTimeoutsRep *time;
+	xcb_connection_t *c = xcb_connect(0, 0);
+	xcb_dpms_get_version_cookie_t vc;
+	xcb_dpms_get_version_reply_t *ver;
+	xcb_dpms_capable_cookie_t cc;
+	xcb_dpms_capable_reply_t *cap;
+	xcb_dpms_get_timeouts_cookie_t tc;
+	xcb_dpms_get_timeouts_reply_t *time;
 
-	XCBPrefetchExtensionData(c, &XCBDPMSId);
+	xcb_prefetch_extension_data(c, &xcb_dpms_id);
 
-	vc = XCBDPMSGetVersion(c, 1, 1);
-	cc = XCBDPMSCapable(c);
-	tc = XCBDPMSGetTimeouts(c);
+	vc = xcb_dpms_get_version(c, 1, 1);
+	cc = xcb_dpms_capable(c);
+	tc = xcb_dpms_get_timeouts(c);
 
-	ver = XCBDPMSGetVersionReply(c, vc, 0);
-	cap = XCBDPMSCapableReply(c, cc, 0);
-	time = XCBDPMSGetTimeoutsReply(c, tc, 0);
+	ver = xcb_dpms_get_version_reply(c, vc, 0);
+	cap = xcb_dpms_capable_reply(c, cc, 0);
+	time = xcb_dpms_get_timeouts_reply(c, tc, 0);
 
 	assert(ver);
 	assert(ver->server_major_version == 1);
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 		time->standby_timeout, time->suspend_timeout, time->off_timeout);
 	free(time);
 
-	XCBDisconnect(c);
+	xcb_disconnect(c);
 
 	exit(0);
 	/*NOTREACHED*/
