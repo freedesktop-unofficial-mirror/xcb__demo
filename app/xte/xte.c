@@ -24,9 +24,9 @@
 
 #include <stdio.h>
 #define X_H   /* make sure we aren't using symbols from X.h */
-#include <X11/XCB/xcb.h>
-#include <X11/XCB/xcb_keysyms.h>
-#include <X11/XCB/xtest.h>
+#include <xcb/xcb.h>
+#include <xcb/xcb_keysyms.h>
+#include <xcb/xtest.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>

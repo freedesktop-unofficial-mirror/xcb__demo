@@ -1,7 +1,7 @@
 /* Copyright (C) 2006 Josh Triplett. All Rights Reserved.  See the file
  * COPYING in this directory for licensing information. */
-#include <X11/XCB/xcb.h>
-#include <X11/XCB/xf86dri.h>
+#include <xcb/xcb.h>
+#include <xcb/xf86dri.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

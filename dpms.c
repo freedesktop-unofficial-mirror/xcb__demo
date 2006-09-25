@@ -4,8 +4,8 @@
  * for licensing information.
  */
 
-#include <X11/XCB/xcb.h>
-#include <X11/XCB/dpms.h>
+#include <xcb/xcb.h>
+#include <xcb/dpms.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>

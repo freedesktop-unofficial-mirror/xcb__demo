@@ -4,8 +4,8 @@
  * for licensing information.
  */
 
-#include <X11/XCB/xcb.h>
-#include <X11/XCB/xcb_aux.h>
+#include <xcb/xcb.h>
+#include <xcb/xcb_aux.h>
 #include "reply_formats.h"
 #include <math.h>
 #include <stdlib.h> /* for free(3) */

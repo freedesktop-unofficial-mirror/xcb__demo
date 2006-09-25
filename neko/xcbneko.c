@@ -22,12 +22,12 @@
 #include <X11/keysym.h>
 #else
 #define X_H   /* make sure we aren't using symbols from X.h */
-#include <X11/XCB/xcb.h>
+#include <xcb/xcb.h>
 /*#include <X11/XCB/xcb_image.h>*/
-#include <X11/XCB/xcb_aux.h>		/* xcb_aux_get_screen_t */
-#include <X11/XCB/xcb_icccm.h>
-#include <X11/XCB/xcb_atom.h>		/* STRING atom */
-#include <X11/XCB/xcb_keysyms.h>
+#include <xcb/xcb_aux.h>		/* xcb_aux_get_screen_t */
+#include <xcb/xcb_icccm.h>
+#include <xcb/xcb_atom.h>		/* STRING atom */
+#include <xcb/xcb_keysyms.h>
 
 typedef enum { False, True } Bool;
 

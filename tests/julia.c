@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <X11/XCB/xcb.h>
-#include <X11/XCB/shm.h>
-#include <X11/XCB/xcb_aux.h>
-#include <X11/XCB/xcb_image.h>
+#include <xcb/xcb.h>
+#include <xcb/shm.h>
+#include <xcb/xcb_aux.h>
+#include <xcb/xcb_image.h>
 
 #include "julia.h"
 

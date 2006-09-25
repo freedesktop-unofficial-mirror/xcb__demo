@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <X11/XCB/xcb.h>
-#include <X11/XCB/xv.h>
+#include <xcb/xcb.h>
+#include <xcb/xv.h>
 
 static void PrintUsage()
 {

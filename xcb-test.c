@@ -22,8 +22,8 @@
 
 #include <stdlib.h>
 
-#include <X11/XCB/xcb.h>
-#include <X11/XCB/xcb_aux.h>
+#include <xcb/xcb.h>
+#include <xcb/xcb_aux.h>
 #include "reply_formats.h"
 
 #ifdef VERBOSE

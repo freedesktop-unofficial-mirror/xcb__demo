@@ -26,11 +26,11 @@
 #include <string.h>
 
 #define X_H
-#include <X11/XCB/xcb.h>
-#include <X11/XCB/shm.h>
-#include <X11/XCB/xcb_aux.h>
-#include <X11/XCB/xcb_image.h>
-#include <X11/XCB/xcb_icccm.h>
+#include <xcb/xcb.h>
+#include <xcb/shm.h>
+#include <xcb/xcb_aux.h>
+#include <xcb/xcb_image.h>
+#include <xcb/xcb_icccm.h>
 
 /* some defines for the flame */
 #define HSPREAD 26

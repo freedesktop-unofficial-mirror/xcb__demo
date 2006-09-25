@@ -1,7 +1,7 @@
 
-#include <X11/XCB/xcb.h>
-#include <X11/XCB/xcb_aux.h>
-#include <X11/XCB/render.h>
+#include <xcb/xcb.h>
+#include <xcb/xcb_aux.h>
+#include <xcb/render.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

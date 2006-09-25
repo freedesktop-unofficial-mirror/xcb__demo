@@ -29,10 +29,10 @@
  */
 
 #include <stdio.h>
-#include <X11/XCB/xcb.h>
-#include <X11/XCB/xcb_aux.h>
-#include <X11/XCB/randr.h>
-#include <X11/XCB/render.h>	/* we share subpixel information */
+#include <xcb/xcb.h>
+#include <xcb/xcb_aux.h>
+#include <xcb/randr.h>
+#include <xcb/render.h>	/* we share subpixel information */
 #include <string.h>
 #include <stdlib.h>
 

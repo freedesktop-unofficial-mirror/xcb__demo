@@ -1,4 +1,4 @@
-#include <X11/XCB/xcb.h>
+#include <xcb/xcb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
