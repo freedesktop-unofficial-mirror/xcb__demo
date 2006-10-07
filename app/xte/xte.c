@@ -23,7 +23,6 @@
    like a little man in your computer.  :) */
 
 #include <stdio.h>
-#define X_H   /* make sure we aren't using symbols from X.h */
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
 #include <xcb/xtest.h>
@@ -60,7 +59,7 @@ uint8_t thing_to_keycode( xcb_connection_t *c, char *thing ) {
   }
 #else
   /* For now, assume thing[0] == Latin-1 keysym */
-  ks.id = (uint8_t)thing[0];
+  ks = (uint8_t)thing[0];
 #endif  
 
   kc = xcb_key_symbols_get_keycode( syms, ks );
@@ -68,7 +67,7 @@ uint8_t thing_to_keycode( xcb_connection_t *c, char *thing ) {
   dmsg( 1, "String '%s' maps to keysym '%d'\n", thing, ks );
   dmsg( 1, "String '%s' maps to keycode '%d'\n", thing, kc );
 
-  return( kc.id );
+  return( kc );
 }
 
 /* xcb_test_fake_input(type,detail,time,window,x,y,device) */
@@ -117,9 +116,9 @@ void send_key( xcb_connection_t *c, char *thing ) {
   const char *cap = "~!@#$%^&*()_+{}|:\"<>?";
   
   if (thing[0] >= 'A' && thing[0] <= 'Z')
-    wrap_code = xcb_key_symbols_get_keycode( syms, shift ).id;
+    wrap_code = xcb_key_symbols_get_keycode( syms, shift );
   else if (strchr(cap, thing[0]) != NULL)
-    wrap_code = xcb_key_symbols_get_keycode( syms, shift ).id;
+    wrap_code = xcb_key_symbols_get_keycode( syms, shift );
 #endif
   code = thing_to_keycode( c, thing );
 
@@ -201,18 +200,18 @@ void process_command( xcb_connection_t *c, const char *cmd ) {
   }else if( IS_CMD( cmd, "sym " ) ) {
     xcb_keysym_t sym;
     xcb_keycode_t code;
-    sscanf( str, "sym %x", &sym.id );
+    sscanf( str, "sym %x", &sym );
     code = xcb_key_symbols_get_keycode( syms, sym );
-    fake_input( c, XCB_KEY_PRESS, code.id );
-    fake_input( c, XCB_KEY_RELEASE, code.id );
+    fake_input( c, XCB_KEY_PRESS, code );
+    fake_input( c, XCB_KEY_RELEASE, code );
   }else if( IS_CMD( cmd, "symdown " ) ) {
     xcb_keysym_t sym;
-    sscanf( str, "symdown %x", &sym.id );
-    fake_input( c, XCB_KEY_PRESS, xcb_key_symbols_get_keycode( syms, sym ).id );
+    sscanf( str, "symdown %x", &sym );
+    fake_input( c, XCB_KEY_PRESS, xcb_key_symbols_get_keycode( syms, sym ) );
   }else if( IS_CMD( cmd, "symup " ) ) {
     xcb_keysym_t sym;
-    sscanf( str, "symup %x", &sym.id );
-    fake_input( c, XCB_KEY_RELEASE, xcb_key_symbols_get_keycode( syms, sym ).id );
+    sscanf( str, "symup %x", &sym );
+    fake_input( c, XCB_KEY_RELEASE, xcb_key_symbols_get_keycode( syms, sym ) );
   }else{
     fprintf( stderr, "Unknown command '%s'\n", cmd );
   }

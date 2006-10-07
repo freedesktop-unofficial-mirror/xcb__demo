@@ -416,7 +416,7 @@ main (int argc, char **argv)
 
 	  printf("Got a screen change notify event!\n");
 	  printf(" window = %d\n root = %d\n size_index = %d\n rotation %d\n", 
-	       (int) sce->request_window.xid, (int) sce->root.xid, 
+	       (int) sce->request_window, (int) sce->root, 
 	       sce->sizeID,  sce->rotation);
 	  printf(" timestamp = %d, config_timestamp = %d\n",
 	       sce->timestamp, sce->config_timestamp);

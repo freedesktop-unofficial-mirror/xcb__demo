@@ -56,7 +56,7 @@ void print_setup()
 
     print_formats();
 
-    printf("\n" "keycode range:    minimum %d, maximum %d", xcb_get_setup(c)->min_keycode.id, xcb_get_setup(c)->max_keycode.id);
+    printf("\n" "keycode range:    minimum %d, maximum %d", xcb_get_setup(c)->min_keycode, xcb_get_setup(c)->max_keycode);
 }
 
 void print_formats()

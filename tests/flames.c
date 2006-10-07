@@ -25,7 +25,6 @@
 #include <assert.h>
 #include <string.h>
 
-#define X_H
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
 #include <xcb/xcb_aux.h>
@@ -104,14 +103,14 @@ flame_init ()
     }
   screen = xcb_aux_get_screen (f->xcb.c, screen_nbr);
 
-  f->xcb.draw.window = screen->root;
-  f->xcb.gc = xcb_gcontext_new (f->xcb.c);
+  f->xcb.draw = screen->root;
+  f->xcb.gc = xcb_generate_id (f->xcb.c);
   mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
   values[0] = screen->black_pixel;
   values[1] = 0; /* no graphics exposures */
   xcb_create_gc (f->xcb.c, f->xcb.gc, f->xcb.draw, mask, values);
 
-  gc = xcb_gcontext_new (f->xcb.c);
+  gc = xcb_generate_id (f->xcb.c);
   mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
   values[0] = screen->white_pixel;
   values[1] = 0; /* no graphics exposures */
@@ -121,9 +120,9 @@ flame_init ()
   mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
   values[0] = screen->white_pixel;
   values[1] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS;
-  f->xcb.draw.window = xcb_window_new (f->xcb.c);
+  f->xcb.draw = xcb_generate_id (f->xcb.c);
   xcb_create_window (f->xcb.c, f->xcb.depth,
-		   f->xcb.draw.window,
+		   f->xcb.draw,
 		   screen->root,
 		   0, 0, BG_W, BG_H,
 		   0,
@@ -132,20 +131,20 @@ flame_init ()
 		   mask, values);
   title_set (f, "XCB Flames");
   
-  f->xcb.pixmap.pixmap = xcb_pixmap_new (f->xcb.c);
+  f->xcb.pixmap = xcb_generate_id (f->xcb.c);
   xcb_create_pixmap (f->xcb.c, f->xcb.depth,
-		   f->xcb.pixmap.pixmap, f->xcb.draw,
+		   f->xcb.pixmap, f->xcb.draw,
 		   BG_W, BG_H);
   xcb_poly_fill_rectangle(f->xcb.c, f->xcb.pixmap, gc, 1, &rect_coord);
 
-  xcb_map_window (f->xcb.c, f->xcb.draw.window);
+  xcb_map_window (f->xcb.c, f->xcb.draw);
   xcb_flush (f->xcb.c);
 
-  f->xcb.cmap = xcb_colormap_new (f->xcb.c);
+  f->xcb.cmap = xcb_generate_id (f->xcb.c);
   xcb_create_colormap (f->xcb.c,
 		     XCB_COLORMAP_ALLOC_NONE,
 		     f->xcb.cmap,
-		     f->xcb.draw.window,
+		     f->xcb.draw,
 		     screen->root_visual);
 
   /* Allocation of the flame arrays */
@@ -209,7 +208,7 @@ main ()
 
   while (1)
     {
-      if ((e = xcb_poll_for_event (f->xcb.c, NULL)))
+      if ((e = xcb_poll_for_event (f->xcb.c)))
 	{
 	  switch (e->response_type)
 	    {
@@ -264,7 +263,7 @@ static void title_set (flame *f, const char *title)
                                            atom_name),
                             NULL);
   xcb_change_property(f->xcb.c, XCB_PROP_MODE_REPLACE,
-                    f->xcb.draw.window,
+                    f->xcb.draw,
                     rep->atom, encoding, 8, strlen (title), title);
   free (rep);
 }

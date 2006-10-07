@@ -2,7 +2,6 @@ XCB TODO
 --------
 * DEBUG not supported
 * -geometry not supported
-* -iconic not supported (don't like the util interfaces)
 
 XCB ENHANCEMENTS
 ----------------
@@ -11,6 +10,9 @@ XCB ENHANCEMENTS
 * no X resource cleanup. OK?
 * convert to use threading
   * multi-neko!
+
+-- iano@quirkster.com  >^.^<
+
 =======================
 
 This is XNeko.
@@ -21,7 +23,6 @@ Don't look at the code.
 -----------------------
  INSTALLATION
 -----------------------
-% xmkmf -a
 % make
 Dat's it.
 

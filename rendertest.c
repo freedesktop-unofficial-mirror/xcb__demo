@@ -53,7 +53,7 @@ int print_formats_info(xcb_render_query_pict_formats_reply_t *reply)
         xcb_render_pictforminfo_t *forminfo = (xcb_render_pictforminfo_t *)forminfo_iter.data;
 
         fprintf(stdout, "PICTFORMINFO #%d\n", 1 + num_formats - forminfo_iter.rem);
-        fprintf(stdout, "    PICTFORMAT ID:          %d\n", forminfo->id.xid);
+        fprintf(stdout, "    PICTFORMAT ID:          %d\n", forminfo->id);
         fprintf(stdout, "    PICTFORMAT Type:        %d\n", forminfo->type);
         fprintf(stdout, "    PICTFORMAT Depth:       %d\n", forminfo->depth);
         fprintf(stdout, "        Direct RedShift:    %d\n", forminfo->direct.red_shift);
@@ -76,7 +76,7 @@ int print_formats_info(xcb_render_query_pict_formats_reply_t *reply)
         
         fprintf(stdout, "Screen #%d\n", 1 + num_screens - screen_iter.rem);
         fprintf(stdout, "    Depths for this screen:    %d\n", cscreen->num_depths);
-        fprintf(stdout, "    Fallback PICTFORMAT:       %d\n", cscreen->fallback.xid);
+        fprintf(stdout, "    Fallback PICTFORMAT:       %d\n", cscreen->fallback);
         depth_iter = xcb_render_pictscreen_depths_iterator(cscreen);
 
         num_depths = cscreen->num_depths;
@@ -96,8 +96,8 @@ int print_formats_info(xcb_render_query_pict_formats_reply_t *reply)
                 xcb_render_pictvisual_t *cvisual = visual_iter.data;
                 
                 fprintf(stdout, "        Visual #%d\n", 1 + num_visuals - visual_iter.rem);
-                fprintf(stdout, "            VISUALID:      %d\n", cvisual->visual.id);
-                fprintf(stdout, "            PICTFORMAT:    %d\n", cvisual->format.xid);
+                fprintf(stdout, "            VISUALID:      %d\n", cvisual->visual);
+                fprintf(stdout, "            PICTFORMAT:    %d\n", cvisual->format);
                 xcb_render_pictvisual_next(&visual_iter);
             }
             xcb_render_pictdepth_next(&depth_iter);
@@ -127,10 +127,10 @@ int draw_window(xcb_connection_t *conn, xcb_render_query_pict_formats_reply_t *r
     int index;
 
     root = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
-    root_drawable.window = root->root;
+    root_drawable = root->root;
    
     /* Setting query so that it will search for an 8 bit alpha surface. */
-    query.id.xid = 0;
+    query.id = 0;
     query.type = XCB_RENDER_PICT_TYPE_DIRECT;
     query.depth = 8;
     query.direct.red_mask = 0;
@@ -143,7 +143,7 @@ int draw_window(xcb_connection_t *conn, xcb_render_query_pict_formats_reply_t *r
 
     /* Get the xcb_render_pictformat_t we will use for the alpha mask */
     alpha_forminfo_ptr = get_pictforminfo(reply, &query);
-    alpha_mask_format.xid = alpha_forminfo_ptr->id.xid;
+    alpha_mask_format = alpha_forminfo_ptr->id;
     
     /* resetting certain parts of query to search for the surface format */
     query.depth = 32;
@@ -151,28 +151,28 @@ int draw_window(xcb_connection_t *conn, xcb_render_query_pict_formats_reply_t *r
   
     /* Get the surface forminfo and xcb_render_pictformat_t */
     forminfo_ptr = get_pictforminfo(reply, &query);
-    surface_format.xid = forminfo_ptr->id.xid;
+    surface_format = forminfo_ptr->id;
     
     /* assign XIDs to all of the drawables and pictures */
     for(index = 0; index < 4; index++)
     {
-        surfaces[index] = xcb_pixmap_new(conn);
-        pict_surfaces[index] = xcb_render_picture_new(conn);
+        surfaces[index] = xcb_generate_id(conn);
+        pict_surfaces[index] = xcb_generate_id(conn);
     }
-    alpha_surface = xcb_pixmap_new(conn);
-    alpha_pict = xcb_render_picture_new(conn);
-    window = xcb_window_new(conn);
-    window_pict = xcb_render_picture_new(conn);
-    window_drawable.window = window;
-    root_picture = xcb_render_picture_new(conn);
+    alpha_surface = xcb_generate_id(conn);
+    alpha_pict = xcb_generate_id(conn);
+    window = xcb_generate_id(conn);
+    window_pict = xcb_generate_id(conn);
+    window_drawable = window;
+    root_picture = xcb_generate_id(conn);
     
     /* Here we will create the pixmaps that we will use */
     for(index = 0; index < 4; index++)
     {
-        surfaces[index] = xcb_pixmap_new(conn);
+        surfaces[index] = xcb_generate_id(conn);
         xcb_create_pixmap(conn, 32, surfaces[index], root_drawable, 600, 600);
     }
-    alpha_surface = xcb_pixmap_new(conn);
+    alpha_surface = xcb_generate_id(conn);
     xcb_create_pixmap(conn, 8, alpha_surface, root_drawable, 600, 600);
     
     /* initialize the value list */
@@ -182,7 +182,7 @@ int draw_window(xcb_connection_t *conn, xcb_render_query_pict_formats_reply_t *r
     /* Create the window */
     xcb_create_window(conn, /* xcb_connection_t */
             0,  /* depth, 0 means it will copy it from the parent */
-            window, root_drawable.window, /* window and parent */
+            window, root_drawable, /* window and parent */
             0, 0,   /* x and y */
             600, 600,   /* width and height */
             0,  /* border width */
@@ -200,12 +200,12 @@ int draw_window(xcb_connection_t *conn, xcb_render_query_pict_formats_reply_t *r
             value_mask, value_list);
     xcb_render_create_picture(conn, window_pict, window_drawable, window_format,
             value_mask, value_list);
-    tmp.pixmap = alpha_surface;
+    tmp = alpha_surface;
     xcb_render_create_picture(conn, alpha_pict, tmp, alpha_mask_format,
             value_mask, value_list);
     for(index = 0; index < 4; index++)
     {
-        tmp.pixmap = surfaces[index];
+        tmp = surfaces[index];
         xcb_render_create_picture(conn, pict_surfaces[index], tmp, surface_format,
                 value_mask, value_list);
     }
@@ -437,7 +437,7 @@ xcb_render_pictformat_t get_pictformat_from_visual(xcb_render_query_pict_formats
             {
                 cvisual = visual_iter.data;
 
-                if(cvisual->visual.id == query.id)
+                if(cvisual->visual == query)
                 {
                     return cvisual->format;
                 }
@@ -447,7 +447,7 @@ xcb_render_pictformat_t get_pictformat_from_visual(xcb_render_query_pict_formats
         }
         xcb_render_pictscreen_next(&screen_iter);
     }
-    return_value.xid = 0;
+    return_value = 0;
     return return_value;
 }
 
@@ -463,7 +463,7 @@ xcb_render_pictforminfo_t *get_pictforminfo(xcb_render_query_pict_formats_reply_
         cformat  = forminfo_iter.data;
         xcb_render_pictforminfo_next(&forminfo_iter);
 
-        if( (query->id.xid != 0) && (query->id.xid != cformat->id.xid) )
+        if( (query->id != 0) && (query->id != cformat->id) )
         {
             continue;
         }
@@ -533,7 +533,7 @@ int main(int argc, char *argv[])
     
     print_formats_info(formats_reply);
    
-    forminfo_query.id.xid = 0;
+    forminfo_query.id = 0;
     forminfo_query.type = XCB_RENDER_PICT_TYPE_DIRECT;
     forminfo_query.depth = 8;
     forminfo_query.direct.red_mask = 0;
@@ -543,9 +543,9 @@ int main(int argc, char *argv[])
     
     forminfo_result = get_pictforminfo(formats_reply, &forminfo_query);
     fprintf(stdout, "\n***** found PICTFORMAT:  %d *****\n",
-            forminfo_result->id.xid);
+            forminfo_result->id);
     rootformat = get_pictformat_from_visual(formats_reply, root->root_visual);
-    fprintf(stdout, "\n***** found root PICTFORMAT:   %d *****\n", rootformat.xid);
+    fprintf(stdout, "\n***** found root PICTFORMAT:   %d *****\n", rootformat);
    
 #if 0
     draw_window(c, formats_reply);

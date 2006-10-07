@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
             name = ExtractString(xcb_xv_adaptor_info_name(ainfo), xcb_xv_adaptor_info_name_length(ainfo));
             fprintf(stdout, "  Adaptor #%i: \"%s\"\n", j, name);
             fprintf(stdout, "    number of ports: %i\n", ainfo->num_ports);
-            fprintf(stdout, "    port base: %i\n", ainfo->base_id.xid);
+            fprintf(stdout, "    port base: %i\n", ainfo->base_id);
             fprintf(stdout, "    operations supported: ");
             free(name);
 
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
             fprintf(stdout, "    supported visuals:\n");
             for (k=0; k < ainfo->num_formats; k++, format++)
                 fprintf(stdout, "      depth %i, visualID 0x%2x\n",
-                        format->depth, format->visual.id);
+                        format->depth, format->visual);
 
             attr_rep = xcb_xv_query_port_attributes_reply(c,
                     xcb_xv_query_port_attributes(c, ainfo->base_id), NULL);
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
                                 NULL);
                         the_atom = atom_rep->atom;
 
-                        if (the_atom.xid != 0) {
+                        if (the_atom != 0) {
                             xcb_xv_get_port_attribute_reply_t *pattr_rep =
                                 xcb_xv_get_port_attribute_reply(c,
                                         xcb_xv_get_port_attribute(c, ainfo->base_id, the_atom),
@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
                         if(nstrcmp(name, strlen(name), "XV_IMAGE")) {
                             fprintf(stdout,
                                     "      encoding ID #%i: \"%*s\"\n",
-                                    encoding->encoding.xid,
+                                    encoding->encoding,
                                     strlen(name),
                                     name);
                             fprintf(stdout, "        size: %i x %i\n",

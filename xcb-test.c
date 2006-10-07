@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 #endif
 
 #if 1
-    window = xcb_window_new(c);
+    window = xcb_generate_id(c);
 #else
     window = 0; /* should be an invalid ID */
 #endif
@@ -135,10 +135,8 @@ int main(int argc, char **argv)
     attr[0] = xcb_get_window_attributes(c, window);
 #endif
 #ifdef TEST_GET_GEOMETRY
-    d.window = root->root;
-    geom[0] = xcb_get_geometry(c, d);
-    d.window = window;
-    geom[1] = xcb_get_geometry(c, d);
+    geom[0] = xcb_get_geometry(c, root->root);
+    geom[1] = xcb_get_geometry(c, window);
 #endif
 #ifdef TEST_QUERY_TREE
 # ifdef SUPERVERBOSE /* this produces a lot of output :) */
@@ -175,13 +173,12 @@ int main(int argc, char **argv)
     treerep[1] = xcb_query_tree_reply(c, tree[1], 0);
     formatQueryTreeReply(window, treerep[1]);
 
-    if(treerep[1] && treerep[1]->parent.xid && treerep[1]->parent.xid != root->root.xid)
+    if(treerep[1] && treerep[1]->parent && treerep[1]->parent != root->root)
     {
         tree[2] = xcb_query_tree(c, treerep[1]->parent);
 
 # ifdef TEST_GET_GEOMETRY
-        d.window = treerep[1]->parent;
-        geom[2] = xcb_get_geometry(c, d);
+        geom[2] = xcb_get_geometry(c, treerep[1]->parent);
         geomrep[2] = xcb_get_geometry_reply(c, geom[2], 0);
         formatGetGeometryReply(treerep[1]->parent, geomrep[2]);
         free(geomrep[2]);
@@ -231,7 +228,7 @@ int show_event(xcb_generic_event_t *e)
 void try_events(xcb_connection_t *c)
 {
     xcb_generic_event_t *e;
-    while((e = xcb_poll_for_event(c, 0)) && show_event(e))
+    while((e = xcb_poll_for_event(c)) && show_event(e))
         /* empty statement */ ;
 }
 

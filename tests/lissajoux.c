@@ -157,7 +157,7 @@ shm_test (Data *datap)
       assert(shminfo.shmaddr);
       datap->image->data = shminfo.shmaddr;
 
-      shminfo.shmseg = xcb_shm_seg_new (datap->conn);
+      shminfo.shmseg = xcb_generate_id (datap->conn);
       xcb_shm_attach (datap->conn, shminfo.shmseg,
 		    shminfo.shmid, 0);
       shmctl_status = shmctl(shminfo.shmid, IPC_RMID, 0);
@@ -215,38 +215,38 @@ main (int argc, char *argv[])
   screen = xcb_aux_get_screen(data.conn, screen_num);
   data.depth = xcb_aux_get_depth (data.conn, screen);
 
-  win.window = screen->root;
+  win = screen->root;
 
-  data.gc = xcb_gcontext_new (data.conn);
+  data.gc = xcb_generate_id (data.conn);
   mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
   valgc[0] = screen->black_pixel;
   valgc[1] = 0; /* no graphics exposures */
   xcb_create_gc (data.conn, data.gc, win, mask, valgc);
 
-  bgcolor = xcb_gcontext_new (data.conn);
+  bgcolor = xcb_generate_id (data.conn);
   mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
   valgc[0] = screen->white_pixel;
   valgc[1] = 0; /* no graphics exposures */
   xcb_create_gc (data.conn, bgcolor, win, mask, valgc);
 
-  data.draw.window = xcb_window_new (data.conn);
+  data.draw = xcb_generate_id (data.conn);
   mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_DONT_PROPAGATE;
   valwin[0] = screen->white_pixel;
   valwin[1] = XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_EXPOSURE;
   valwin[2] = XCB_EVENT_MASK_BUTTON_PRESS;
   xcb_create_window (data.conn, 0,
-		   data.draw.window,
+		   data.draw,
 		   screen->root,
 		   0, 0, W_W, W_H,
 		   10,
 		   XCB_WINDOW_CLASS_INPUT_OUTPUT,
 		   screen->root_visual,
 		   mask, valwin);
-  xcb_map_window (data.conn, data.draw.window);
+  xcb_map_window (data.conn, data.draw);
 
-  rect.pixmap = xcb_pixmap_new (data.conn);
+  rect = xcb_generate_id (data.conn);
   xcb_create_pixmap (data.conn, data.depth,
-		   rect.pixmap, data.draw,
+		   rect, data.draw,
 		   W_W, W_H);
   xcb_poly_fill_rectangle(data.conn, rect, bgcolor, 1, &rect_coord);
 
@@ -265,7 +265,7 @@ main (int argc, char *argv[])
   t_previous = 0.0;
   while (1)
     {
-      e = xcb_poll_for_event(data.conn, NULL);
+      e = xcb_poll_for_event(data.conn);
       if (e)
 	{
 	  switch (e->response_type)

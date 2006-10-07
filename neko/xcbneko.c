@@ -21,9 +21,8 @@
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 #else
-#define X_H   /* make sure we aren't using symbols from X.h */
 #include <xcb/xcb.h>
-/*#include <X11/XCB/xcb_image.h>*/
+/*#include <xcb/xcb_image.h>*/
 #include <xcb/xcb_aux.h>		/* xcb_aux_get_screen_t */
 #include <xcb/xcb_icccm.h>
 #include <xcb/xcb_atom.h>		/* STRING atom */
@@ -403,19 +402,16 @@ xcb_pixmap_t CreatePixmapFromBitmapData( xcb_connection_t *c,
 	xcb_window_t window, char *data, uint16_t w, uint16_t h,
 	uint32_t fg, uint32_t bg, uint32_t depth)
 {
-  xcb_drawable_t drawable;
-  xcb_pixmap_t bitmap = xcb_pixmap_new( c );
+  xcb_pixmap_t bitmap = xcb_generate_id( c );
 
-  drawable.window = window;
-  xcb_create_pixmap( c, depth, bitmap, drawable, w, h );
+  xcb_create_pixmap( c, depth, bitmap, window, w, h );
   
-  xcb_gcontext_t gc = xcb_gcontext_new( c );
+  xcb_gcontext_t gc = xcb_generate_id( c );
   
   uint32_t mask = (depth==1 ? 0 : XCB_GC_FOREGROUND | XCB_GC_BACKGROUND);
   uint32_t values[] = { fg, bg };
 
-  drawable.pixmap = bitmap;
-  xcb_create_gc( c, gc, drawable, mask, values );
+  xcb_create_gc( c, gc, bitmap, mask, values );
   
   /* XImage attributes: bpp=1, xoffset=0,
        byte_order=bit_order=LSB, unit=8, pad=8,   bpl=(w+7/8) */
@@ -453,7 +449,7 @@ xcb_pixmap_t CreatePixmapFromBitmapData( xcb_connection_t *c,
        screen->bitmap_format_scanline_unit
        left_pad = (0 + 0) & (32 - 1) = 0 */
 
-  xcb_put_image( c, format, drawable, gc,
+  xcb_put_image( c, format, bitmap, gc,
   	w, h, 0, 0,
   	0, 1,		/* left_pad, depth */
   	bufLen, buf);
@@ -483,7 +479,6 @@ xcb_pixmap_t CreateBitmapFromData(xcb_connection_t *c, xcb_window_t window,
 void  InitBitmapAndGCs(void) {
   BitmapGCData	*BitmapGCDataTablePtr;
   uint32_t theGCValues[5];
-  xcb_drawable_t drawable;   drawable.window = theWindow;
 
   theGCValues[0] = XCB_GX_COPY;
 
@@ -505,10 +500,10 @@ void  InitBitmapAndGCs(void) {
 		BitmapGCDataTablePtr->PixelHeight,
 		theFgPixel, theBgPixel, theScreen->root_depth);
 
-	theGCValues[4] = BitmapGCDataTablePtr->BitmapCreatePtr->xid; /* tile */
+	theGCValues[4] = *(BitmapGCDataTablePtr->BitmapCreatePtr); /* tile */
 	
-	*(BitmapGCDataTablePtr->GCCreatePtr) = xcb_gcontext_new( xc );
-	xcb_create_gc( xc, *(BitmapGCDataTablePtr->GCCreatePtr), drawable,
+	*(BitmapGCDataTablePtr->GCCreatePtr) = xcb_generate_id( xc );
+	xcb_create_gc( xc, *(BitmapGCDataTablePtr->GCCreatePtr), theWindow,
 		  XCB_GC_FUNCTION | XCB_GC_FOREGROUND | XCB_GC_BACKGROUND |
 		  XCB_GC_FILL_STYLE | XCB_GC_TILE,
 		  theGCValues );
@@ -627,7 +622,7 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 	exit( 1 );
   }
   
-  theCursor = xcb_cursor_new( xc );
+  theCursor = xcb_generate_id( xc );
   xcb_create_cursor ( xc, theCursor, theCursorSource, theCursorMask,
   	blackRep->visual_red, blackRep->visual_green, blackRep->visual_blue,
   	whiteRep->visual_red, whiteRep->visual_green, whiteRep->visual_blue,
@@ -639,7 +634,7 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
   free(whiteRep);
 
   if ( useRoot ) {
-    uint32_t rootAttributes[] = { theBgPixel, EVENT_MASK_ROOT, theCursor.xid };
+    uint32_t rootAttributes[] = { theBgPixel, EVENT_MASK_ROOT, theCursor };
 	theWindow = theScreen->root;
 	xcb_change_window_attributes(xc, theWindow,
 		XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_CURSOR, rootAttributes );
@@ -647,9 +642,8 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 	/* XClearWindow: clear area with all dimensions 0 */
 	xcb_clear_area( xc, False, theWindow, 0, 0, 0, 0 );
 	
-	xcb_drawable_t d = { theWindow };
 	xcb_get_geometry_reply_t *geometry = xcb_get_geometry_reply( xc,
-	  xcb_get_geometry( xc, d ), NULL);
+	  xcb_get_geometry( xc, theWindow ), NULL);
 	if (geometry) {
 	  /* only width & height are used by the program */
 	  WindowWidth  = geometry->width;
@@ -667,12 +661,12 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 		theFgPixel,    /* border */
 		False,         /* override_redirect */
 		EVENT_MASK,
-		theCursor.xid };
+		theCursor };
 
 	unsigned long theWindowMask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL |
 	  XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK | XCB_CW_CURSOR;
 	
-	theWindow = xcb_window_new( xc );
+	theWindow = xcb_generate_id( xc );
 	xcb_create_window( xc,
 		theDepth,
 		theWindow,
@@ -784,12 +778,11 @@ SetNekoState( int SetValue )
 void
 DrawNeko( int x, int y, xcb_gcontext_t DrawGC )
 {
-  xcb_drawable_t drawable;  drawable.window = theWindow;
   xcb_rectangle_t rect = { NekoLastX, NekoLastY, BITMAP_WIDTH, BITMAP_HEIGHT };
 
   if ( (x != NekoLastX || y != NekoLastY) && (EventState != DEBUG_LIST) )
   {
-	xcb_poly_fill_rectangle( xc, drawable, SpaceGC, 1, &rect );
+	xcb_poly_fill_rectangle( xc, theWindow, SpaceGC, 1, &rect );
 	rect.x = x; rect.y = y;
 
   }
@@ -799,7 +792,7 @@ DrawNeko( int x, int y, xcb_gcontext_t DrawGC )
   xcb_change_gc( xc, DrawGC, originMask, origin );
   /* XSetTSOrigin( theDisplay, DrawGC, x, y ); */
 
-  xcb_poly_fill_rectangle( xc, drawable, DrawGC, 1, &rect );
+  xcb_poly_fill_rectangle( xc, theWindow, DrawGC, 1, &rect );
 
   xcb_flush( xc );
 
@@ -811,10 +804,9 @@ DrawNeko( int x, int y, xcb_gcontext_t DrawGC )
 
 
 void  RedrawNeko(void) {
-  xcb_drawable_t drawable;  drawable.window = theWindow;
   xcb_rectangle_t rect = { NekoLastX, NekoLastY, BITMAP_WIDTH, BITMAP_HEIGHT };
 
-  xcb_poly_fill_rectangle( xc, drawable, NekoLastGC, 1, &rect );
+  xcb_poly_fill_rectangle( xc, theWindow, NekoLastGC, 1, &rect );
 
   xcb_flush( xc );
 }
@@ -1119,7 +1111,7 @@ ProcessKeyPress( xcb_key_press_event_t *theKeyEvent )
   theKeySym = xcb_key_press_lookup_keysym( theKeySyms, theKeyEvent, 1 );
 
   /* KeySym XK_Q == 'Q' */
-  if (theKeySym.id == 'Q' && (theKeyEvent->state & XCB_MOD_MASK_1))
+  if (theKeySym == 'Q' && (theKeyEvent->state & XCB_MOD_MASK_1))
     ReturnState = False;
 
 #ifdef	DEBUG
@@ -1183,7 +1175,7 @@ void  NekoAdjust(void) {
 
 int IsDeleteMessage(xcb_client_message_event_t *msg)
 {
-	return msg->data.data32[0] == deleteWindowAtom.xid;
+	return msg->data.data32[0] == deleteWindowAtom;
 }
 
 Bool  ProcessEvent(void) {
@@ -1192,12 +1184,11 @@ Bool  ProcessEvent(void) {
   xcb_expose_event_t *theExposure;
   xcb_button_press_event_t *theButtonPress;
   Bool	ContinueState = True;
-  int error = 0;
   
   switch ( EventState ) {
   case NORMAL_STATE:
     while ( ContinueState &&
-            NULL != (theEvent = xcb_poll_for_event( xc, &error )) ) {  /*while ( XCheckMaskEvent( theDisplay, EVENT_MASK, &theEvent ) ) {*/
+            NULL != (theEvent = xcb_poll_for_event( xc )) ) {  /*while ( XCheckMaskEvent( theDisplay, EVENT_MASK, &theEvent ) ) {*/
 	  switch ( theEvent->response_type & 0x7f ) {
 	  case XCB_CONFIGURE_NOTIFY:
 	    theConfigureNotification = (xcb_configure_notify_event_t *)theEvent;
@@ -1221,7 +1212,7 @@ Bool  ProcessEvent(void) {
 		break;
 	  case XCB_BUTTON_PRESS:
 	    theButtonPress = (xcb_button_press_event_t *)theEvent;
-		ContinueState = ( theButtonPress->detail.id != 3 );	/* xbutton.button */
+		ContinueState = ( theButtonPress->detail != 3 );	/* xbutton.button */
 		break;
 	  /* new: handle ClientMessage */
 	  case XCB_CLIENT_MESSAGE:
@@ -1233,8 +1224,6 @@ Bool  ProcessEvent(void) {
 		break;
 	  }
 	  free(theEvent);
-	  if (error != 0)
-	  	return False;
 	} /* end while */
 	break;
 #ifdef	DEBUG

@@ -51,7 +51,7 @@ static void get_depth()
 
 	depth = geom->depth;
 	fprintf(stderr, "Root 0x%x: %dx%dx%d\n",
-	        root->root.xid, geom->width, geom->height, geom->depth);
+	        root->root, geom->width, geom->height, geom->depth);
 	free(geom);
 }
 
@@ -69,9 +69,9 @@ int main()
 	root = xcb_aux_get_screen(c, screen_num);
 	get_depth();
 
-	rootwin.window = root->root;
-	white = xcb_gcontext_new(c);
-	black = xcb_gcontext_new(c);
+	rootwin = root->root;
+	white = xcb_generate_id(c);
+	black = xcb_generate_id(c);
 
 	pthread_create(&thr, 0, event_thread, 0);
 
@@ -114,8 +114,8 @@ void *run(void *param)
 
 	xcb_point_t line[2];
 
-	windows[idx].w.window = xcb_window_new(c);
-	windows[idx].p.pixmap = xcb_pixmap_new(c);
+	windows[idx].w = xcb_generate_id(c);
+	windows[idx].p = xcb_generate_id(c);
 	windows[idx].width = 300;
 	line[0].x = xo = windows[idx].width / 2;
 	windows[idx].height = 300;
@@ -136,17 +136,17 @@ void *run(void *param)
 		values[1] = XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_EXPOSURE;
 		values[2] = XCB_EVENT_MASK_BUTTON_PRESS;
 
-		xcb_create_window(c, depth, windows[idx].w.window, root->root,
+		xcb_create_window(c, depth, windows[idx].w, root->root,
 			/* x */ 0, /* y */ 0,
 			windows[idx].width, windows[idx].height,
 			/* border */ 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
 			/* visual */ root->root_visual,
 			mask, values);
 
-		xcb_map_window(c, windows[idx].w.window);
+		xcb_map_window(c, windows[idx].w);
 
 		xcb_create_pixmap(c, depth,
-			windows[idx].p.pixmap, windows[idx].w,
+			windows[idx].p, windows[idx].w,
 			windows[idx].width, windows[idx].height);
 
 		xcb_poly_fill_rectangle(c, windows[idx].p, white, 1, &rect);
@@ -183,7 +183,7 @@ int lookup_window(xcb_window_t w)
 {
 	int i;
 	for(i = 0; i < WINS; ++i)
-		if(windows[i].w.window.xid == w.xid)
+		if(windows[i].w == w)
 			return i;
 	return -1;
 }
@@ -221,11 +221,11 @@ void *event_thread(void *param)
 				fprintf(stderr, "ButtonRelease on unknown window!\n");
 			else
 			{
-				if(bre->detail.id == XCB_BUTTON_INDEX_1)
+				if(bre->detail == XCB_BUTTON_INDEX_1)
 					windows[idx].angv = -windows[idx].angv;
-				else if(bre->detail.id == XCB_BUTTON_INDEX_4)
+				else if(bre->detail == XCB_BUTTON_INDEX_4)
 					windows[idx].angv += 0.001;
-				else if(bre->detail.id == XCB_BUTTON_INDEX_5)
+				else if(bre->detail == XCB_BUTTON_INDEX_5)
 					windows[idx].angv -= 0.001;
 			}
 		}
