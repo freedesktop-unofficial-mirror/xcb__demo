@@ -72,7 +72,8 @@ int main(int argc, char *argv[])
     }
 
     if (!display_name) display_name = getenv("DISPLAY");
-    if (!(c = xcb_connect(display_name, &scrn)))
+    c = xcb_connect(display_name, &scrn);
+    if (xcb_connection_has_error(c))
     {
         fprintf(stderr, "xcbxvinfo: Unable to open display %s\n", display_name);
         exit(1);

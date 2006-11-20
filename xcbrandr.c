@@ -232,7 +232,7 @@ main (int argc, char **argv)
       exit (1);
   }
   c = xcb_connect(display_name, &screen);
-  if (!c) {
+  if (xcb_connection_has_error(c)) {
       fprintf (stderr, "Can't open display %s\n", display_name);
       exit (1);
   }

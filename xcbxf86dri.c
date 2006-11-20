@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     xcb_xf86dri_query_direct_rendering_capable_reply_t *qdr;
     xcb_connection_t *c = xcb_connect(NULL, &screen);
 
-    if(!c)
+    if(xcb_connection_has_error(c))
     {
         fprintf(stderr, "Error establishing connection to X server.");
         return 1;

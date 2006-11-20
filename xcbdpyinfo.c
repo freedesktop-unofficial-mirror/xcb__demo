@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     int screen;
 
     c = xcb_connect(0, &screen);
-    if(!c)
+    if(xcb_connection_has_error(c))
     {
 	fputs("Connect failed.\n", stderr);
 	exit(1);
