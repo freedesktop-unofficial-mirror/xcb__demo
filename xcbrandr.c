@@ -373,7 +373,7 @@ main (int argc, char **argv)
   values[0] = 1;
   xcb_configure_window(c, root->root, mask, values);
 
-  if (setit) xcb_randr_select_input (c, root->root, XCB_RANDR_SM_SCREEN_CHANGE_NOTIFY);
+  if (setit) xcb_randr_select_input (c, root->root, XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE);
 
   if (setit) {
     xcb_randr_set_screen_config_cookie_t sscc;
@@ -422,7 +422,7 @@ main (int argc, char **argv)
 	       sce->timestamp, sce->config_timestamp);
 	  printf(" Rotation = %x\n", sce->rotation);
 	  printf(" %d X %d pixels, %d X %d mm\n",
-		 sce->width, sce->height, sce->mwidth, sce->mheight);
+		 sce->width, sce->height, sce->mmWidth, sce->mmHeight);
 	  
 	  printf("Display width   %d, height   %d\n",
 		 root->width_in_pixels, root->height_in_pixels);
