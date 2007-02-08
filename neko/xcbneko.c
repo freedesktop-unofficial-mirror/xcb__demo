@@ -680,38 +680,37 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 
 	/* new: obey the window-delete protocol, look for XCB_CLIENT_MESSAGE */
 	deleteWindowAtom = GetAtom(xc, "WM_DELETE_WINDOW");
-	SetWMProtocols( xc, theWindow, 1, &deleteWindowAtom );
+	set_wm_protocols( xc, theWindow, 1, &deleteWindowAtom );
 
 	theIconPixmap = CreateBitmapFromData( xc, theWindow,
 										  icon_bits, icon_width, icon_height );
 
-	WMHints *theWMHints = AllocWMHints();
+	wm_hints_t *theWMHints = alloc_wm_hints();
 
-	WMHintsSetIconPixmap( theWMHints, theIconPixmap );
+	wm_hints_set_icon_pixmap( theWMHints, theIconPixmap );
 
 	if ( iconicState )
-	  WMHintsSetIconic( theWMHints );
+	  wm_hints_set_iconic( theWMHints );
 	else
-	  WMHintsSetNormal( theWMHints );
+	  wm_hints_set_normal( theWMHints );
 	
-	SetWMHints( xc, theWindow, theWMHints);
+	set_wm_hints( xc, theWindow, theWMHints);
 	
 	free( theWMHints );
 
 	/* why hide the structure? */
-	SizeHints *theSizeHints = AllocSizeHints();
+	size_hints_t *theSizeHints = alloc_size_hints();
 
 	/* need enum for second param (user specified) */
-	SizeHintsSetPosition(theSizeHints, 0, WindowPointX, WindowPointY);
-	SizeHintsSetSize(theSizeHints, 0, WindowWidth, WindowHeight);
+	size_hints_set_position(theSizeHints, 0, WindowPointX, WindowPointY);
+	size_hints_set_size(theSizeHints, 0, WindowWidth, WindowHeight);
 
-	SetWMNormalHints(xc, theWindow, theSizeHints);
+	set_wm_normal_hints(xc, theWindow, theSizeHints);
 
-	FreeSizeHints(theSizeHints);
+	free_size_hints(theSizeHints);
 
-	/* Um, why do I have to specify the encoding in this API? */
-	SetWMName( xc, theWindow, STRING, strlen(theTitle), theTitle );
-	SetWMIconName( xc, theWindow, STRING, strlen(theTitle), theTitle );
+	set_wm_name( xc, theWindow, STRING, strlen(theTitle), theTitle );
+	set_wm_icon_name( xc, theWindow, STRING, strlen(theTitle), theTitle );
 
 	xcb_map_window( xc, theWindow );
 
