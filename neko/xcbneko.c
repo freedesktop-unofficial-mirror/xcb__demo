@@ -680,37 +680,37 @@ InitScreen( char *DisplayName, char *theGeometry, char *theTitle, Bool iconicSta
 
 	/* new: obey the window-delete protocol, look for XCB_CLIENT_MESSAGE */
 	deleteWindowAtom = GetAtom(xc, "WM_DELETE_WINDOW");
-	set_wm_protocols( xc, theWindow, 1, &deleteWindowAtom );
+	xcb_set_wm_protocols( xc, theWindow, 1, &deleteWindowAtom );
 
 	theIconPixmap = CreateBitmapFromData( xc, theWindow,
 										  icon_bits, icon_width, icon_height );
 
-	wm_hints_t *theWMHints = alloc_wm_hints();
+	xcb_wm_hints_t *theWMHints = xcb_alloc_wm_hints();
 
-	wm_hints_set_icon_pixmap( theWMHints, theIconPixmap );
+	xcb_wm_hints_set_icon_pixmap( theWMHints, theIconPixmap );
 
 	if ( iconicState )
-	  wm_hints_set_iconic( theWMHints );
+	  xcb_wm_hints_set_iconic( theWMHints );
 	else
-	  wm_hints_set_normal( theWMHints );
+	  xcb_wm_hints_set_normal( theWMHints );
 	
-	set_wm_hints( xc, theWindow, theWMHints);
+	xcb_set_wm_hints( xc, theWindow, theWMHints);
 	
 	free( theWMHints );
 
 	/* why hide the structure? */
-	size_hints_t *theSizeHints = alloc_size_hints();
+	xcb_size_hints_t *theSizeHints = xcb_alloc_size_hints();
 
 	/* need enum for second param (user specified) */
-	size_hints_set_position(theSizeHints, 0, WindowPointX, WindowPointY);
-	size_hints_set_size(theSizeHints, 0, WindowWidth, WindowHeight);
+	xcb_size_hints_set_position(theSizeHints, 0, WindowPointX, WindowPointY);
+	xcb_size_hints_set_size(theSizeHints, 0, WindowWidth, WindowHeight);
 
-	set_wm_normal_hints(xc, theWindow, theSizeHints);
+	xcb_set_wm_normal_hints(xc, theWindow, theSizeHints);
 
-	free_size_hints(theSizeHints);
+	xcb_free_size_hints(theSizeHints);
 
-	set_wm_name( xc, theWindow, STRING, strlen(theTitle), theTitle );
-	set_wm_icon_name( xc, theWindow, STRING, strlen(theTitle), theTitle );
+	xcb_set_wm_name( xc, theWindow, STRING, strlen(theTitle), theTitle );
+	xcb_set_wm_icon_name( xc, theWindow, STRING, strlen(theTitle), theTitle );
 
 	xcb_map_window( xc, theWindow );
 
