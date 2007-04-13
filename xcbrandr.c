@@ -422,7 +422,7 @@ main (int argc, char **argv)
 	       sce->timestamp, sce->config_timestamp);
 	  printf(" Rotation = %x\n", sce->rotation);
 	  printf(" %d X %d pixels, %d X %d mm\n",
-		 sce->width, sce->height, sce->mmWidth, sce->mmHeight);
+		 sce->width, sce->height, sce->mwidth, sce->mheight);
 	  
 	  printf("Display width   %d, height   %d\n",
 		 root->width_in_pixels, root->height_in_pixels);
