@@ -5,6 +5,7 @@
 #include <xcb/shm.h>
 #include <xcb/xcb_aux.h>
 #include <xcb/xcb_image.h>
+#define XCB_ALL_PLANES ~0
 
 #include "julia.h"
 
@@ -107,7 +108,7 @@ draw_julia (Data *datap)
       }
 
   xcb_image_put (datap->conn, datap->draw, datap->gc, datap->image,
-	       0, 0, 0, 0, W_W, W_H);
+	       0, 0, 0);
 }
 
 int

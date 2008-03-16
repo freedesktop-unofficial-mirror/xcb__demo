@@ -29,6 +29,7 @@
 #include <xcb/shm.h>
 #include <xcb/xcb_aux.h>
 #include <xcb/xcb_image.h>
+#define XCB_ALL_PLANES ~0
 #include <xcb/xcb_icccm.h>
 
 /* some defines for the flame */
@@ -325,7 +326,7 @@ flame_draw_flame (flame *f)
 	}
     }
   xcb_image_put (f->xcb.c, f->xcb.draw, f->xcb.gc, image,
-	       0, 0, 0, 0, BG_W, BG_H);
+	       0, 0, 0);
   xcb_image_destroy (image);
 }
 

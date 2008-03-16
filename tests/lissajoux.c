@@ -12,6 +12,7 @@
 #include <xcb/shm.h>
 #include <xcb/xcb_aux.h>
 #include <xcb/xcb_image.h>
+#define XCB_ALL_PLANES ~0
 
 #include "lissajoux.h"
 
@@ -99,7 +100,7 @@ draw_lissajoux (Data *datap)
   else
     {
       xcb_image_put (datap->conn, datap->draw, datap->gc, datap->image,
-                   0, 0, 0, 0, W_W, W_H);
+                   0, 0, 0);
       xcb_image_destroy (datap->image);
     }
 }
@@ -119,8 +120,6 @@ step (Data *datap)
       printf("FRAME COUNT..: %i frames\n", loop_count);
       printf("TIME.........: %3.3f seconds\n", t);
       printf("AVERAGE FPS..: %3.3f fps\n", (double)loop_count / t);
-      if (do_shm)
-        xcb_image_shm_destroy (datap->image);
       xcb_disconnect (datap->conn);
       exit(0);
     }
@@ -145,12 +144,12 @@ shm_test (Data *datap)
 	format = rep->pixmap_format;
       else
 	format = 0;
-      datap->image = xcb_image_shm_create (datap->conn, datap->depth,
-                                        format, NULL, W_W, W_H);
+      datap->image = xcb_image_create_native (datap->conn, W_W, W_H,
+                                        format, datap->depth, NULL, ~0, NULL);
       assert(datap->image);
 
       shminfo.shmid = shmget (IPC_PRIVATE,
-			      datap->image->bytes_per_line*datap->image->height,
+			      datap->image->stride*datap->image->height,
 			      IPC_CREAT | 0777);
       assert(shminfo.shmid != -1);
       shminfo.shmaddr = shmat (shminfo.shmid, 0, 0);
