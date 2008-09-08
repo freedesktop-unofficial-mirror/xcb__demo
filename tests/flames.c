@@ -21,14 +21,20 @@
 /* standard library */
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <time.h>
 #include <assert.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
 #include <xcb/xcb_aux.h>
 #include <xcb/xcb_image.h>
+
+/* Needed for xcb_set_wm_protocols() */
+#include <xcb/xcb_icccm.h>
+
 #define XCB_ALL_PLANES ~0
 #include <xcb/xcb_icccm.h>
 
@@ -69,6 +75,7 @@ typedef struct
   
 }flame;
 
+static xcb_atom_t get_atom (xcb_connection_t *connection, const char *atomName);
 static void title_set (flame *f, const char *title);
 static int  ilog2 (unsigned int n);
 static void flame_set_palette (flame *f);
@@ -77,6 +84,22 @@ static void flame_set_random_flame_base (flame *f);
 static void flame_modify_flame_base (flame *f);
 static void flame_process_flame (flame *f);
 static void flame_draw_flame (flame *f);
+
+xcb_atom_t
+get_atom (xcb_connection_t *connection, const char *atomName)
+{
+  if (atomName == NULL)
+    return XCB_NONE;
+  xcb_atom_t atom = XCB_NONE;
+  xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply(connection,
+	xcb_intern_atom(connection, 0, strlen(atomName), atomName), NULL);
+  if (reply)
+    {
+      atom = reply->atom;
+      free(reply);
+    }
+  return atom;
+}
 
 flame *
 flame_init ()
@@ -207,21 +230,34 @@ main ()
   flame_set_flame_zero (f);
   flame_set_random_flame_base (f);
 
-  while (1)
+  xcb_atom_t deleteWindowAtom = get_atom(f->xcb.c, "WM_DELETE_WINDOW");
+  /* Listen to X client messages in order to be able to pickup
+     the "delete window" message that is generated for example
+     when someone clicks the top-right X button within the window
+     manager decoration (or when user hits ALT-F4). */
+  xcb_set_wm_protocols (f->xcb.c, f->xcb.draw, 1, &deleteWindowAtom);
+
+  bool finished = false;
+  while (!finished)
     {
       if ((e = xcb_poll_for_event (f->xcb.c)))
 	{
-	  switch (e->response_type)
+	  switch (e->response_type & 0x7f)
 	    {
 	    case XCB_EXPOSE:
 	      xcb_copy_area(f->xcb.c, f->xcb.pixmap, f->xcb.draw, gc,
 		          0, 0, 0, 0, BG_W, BG_H);
 	      xcb_flush (f->xcb.c);
 	      break;
-            case XCB_BUTTON_PRESS:
-              printf ("Exiting...\n");
-              free (e);
-              goto sortie;
+	    case XCB_CLIENT_MESSAGE:
+	      if (((xcb_client_message_event_t *)e)->data.data32[0] == deleteWindowAtom)
+	        {
+	          finished = true;
+	        }
+	      break;
+	    case XCB_BUTTON_PRESS:
+	      finished = true;
+	      break;
 	    }
 	  free (e);
         }
@@ -229,7 +265,6 @@ main ()
       xcb_flush (f->xcb.c);
     }
 
- sortie:
   flame_shutdown (f);
 
   return 0;
@@ -284,15 +319,32 @@ flame_draw_flame (flame *f)
   int           cl3;
   int           cl4;
 
+  image = xcb_image_get (f->xcb.c, f->xcb.draw,
+		       0, 0, BG_W, BG_H,
+		       XCB_ALL_PLANES, XCB_IMAGE_FORMAT_Z_PIXMAP);
+  /* If the top-level window is minimized (iconic) then the xcb_image_get()
+     will return NULL. In this case, we'll skip both updating and drawing
+     the flame, and we will also do a small sleep so that the program doesn't
+     hog as much CPU while minimized. 
+   
+     Another (non-polling == cleaner) way to not hog the CPU while minimized 
+     would be to pass the XCB_EVENT_MASK_STRUCTURE_NOTIFY flag to
+     xcb_create_window(). This will give you XCB_UNMAP_NOTIFY and
+     XCB_MAP_NOTIFY events whenever the window is "minimized" (made iconic)
+     and "unminimized" (made normal again). This information would then be
+     used to make the main loop use the xcb_wait_for_event() instead of
+     xcb_poll_for_event() while the window is minimized (iconic).     */
+  if (image == NULL)
+    {
+      usleep (100000);
+      return;
+    }
+  f->im = (unsigned int *)image->data;
+
   /* modify the base of the flame */
   flame_modify_flame_base (f);
   /* process the flame array, propagating the flames up the array */
   flame_process_flame (f);
-
-  image = xcb_image_get (f->xcb.c, f->xcb.draw,
-		       0, 0, BG_W, BG_H,
-		       XCB_ALL_PLANES, XCB_IMAGE_FORMAT_Z_PIXMAP);
-  f->im = (unsigned int *)image->data;
 
   for (y = 0 ; y < ((BG_H >> 1) - 1) ; y++)
     {
