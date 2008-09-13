@@ -1,11 +1,16 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
 
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
 #include <xcb/xcb_aux.h>
 #include <xcb/xcb_image.h>
 #define XCB_ALL_PLANES ~0
+
+/* Needed for xcb_set_wm_protocols() */
+#include <xcb/xcb_icccm.h>
 
 #include "julia.h"
 
@@ -38,6 +43,22 @@ double height = 2.4;
 
 /* Numbers of colors in the palette */
 int cmax = 316;
+
+static xcb_atom_t
+get_atom (xcb_connection_t *connection, const char *atomName)
+{
+  if (atomName == NULL)
+    return XCB_NONE;
+  xcb_atom_t atom = XCB_NONE;
+  xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply(connection,
+	xcb_intern_atom(connection, 0, strlen(atomName), atomName), NULL);
+  if (reply)
+    {
+      atom = reply->atom;
+      free(reply);
+    }
+  return atom;
+}
 
 void
 palette_julia (Data *datap)
@@ -123,7 +144,6 @@ main (int argc, char *argv[])
   uint32_t           valgc[2];
   uint32_t           valwin[3];
   xcb_rectangle_t     rect_coord = { 0, 0, W_W, W_H};
-  xcb_generic_event_t *e;
   int              screen_num;
   
   data.conn = xcb_connect (0, &screen_num);
@@ -147,7 +167,7 @@ main (int argc, char *argv[])
   data.draw = xcb_generate_id (data.conn);
   mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_DONT_PROPAGATE;
   valwin[0] = screen->white_pixel;
-  valwin[1] = XCB_EVENT_MASK_KEY_RELEASE | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_EXPOSURE;
+  valwin[1] = XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_EXPOSURE;
   valwin[2] = XCB_EVENT_MASK_BUTTON_PRESS;
   xcb_create_window (data.conn, 0,
 		   data.draw,
@@ -178,35 +198,54 @@ main (int argc, char *argv[])
 
   palette_julia (&data);
 
+  xcb_atom_t deleteWindowAtom = get_atom(data.conn, "WM_DELETE_WINDOW");
+  /* Listen to X client messages in order to be able to pickup
+     the "delete window" message that is generated for example
+     when someone clicks the top-right X button within the window
+     manager decoration (or when user hits ALT-F4). */
+  xcb_set_wm_protocols (data.conn, data.draw, 1, &deleteWindowAtom);
+
   xcb_flush (data.conn); 
 
-  while ((e = xcb_wait_for_event(data.conn)))
+  bool finished = false;
+  while (!finished)
     {
-      switch (e->response_type)
+      xcb_generic_event_t *e;
+      if (e = xcb_wait_for_event(data.conn))
 	{
-	case XCB_EXPOSE:
-	  {
-	    xcb_copy_area(data.conn, rect, data.draw, bgcolor,
-			0, 0, 0, 0, W_W, W_H);
-	    draw_julia (&data);
-	    xcb_flush (data.conn);
-	    break;
+          switch (e->response_type & 0x7f)
+	    {
+	    case XCB_EXPOSE:
+	      {
+	        xcb_copy_area(data.conn, rect, data.draw, bgcolor,
+				0, 0, 0, 0, W_W, W_H);
+	        draw_julia (&data);
+	        xcb_flush (data.conn);
+	        break;
+	      }
+	    case XCB_CLIENT_MESSAGE:
+	      {
+	        if (((xcb_client_message_event_t *)e)->data.data32[0] == deleteWindowAtom)
+	          {
+	            finished = true;
+	          }
+	        break;
+	      }
+	    case XCB_BUTTON_PRESS:
+	      {
+	        finished = true;
+	        break;
+	      }
 	  }
-	case XCB_KEY_RELEASE:
-	case XCB_BUTTON_RELEASE:
-	  {
-            if (data.palette)
-              free (data.palette);
-            if (data.image)
-              xcb_image_destroy (data.image);
-            free (e);
-            xcb_disconnect (data.conn);
-            exit (0);
-	    break;
-	  }
-	}
-      free (e);
+        free (e);
+      }
     }
 
-  return 1;
+  if (data.palette)
+    free (data.palette);
+  if (data.image)
+    xcb_image_destroy (data.image);
+  xcb_disconnect (data.conn);
+
+  return 0;
 }

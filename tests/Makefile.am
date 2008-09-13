@@ -5,7 +5,7 @@ INCLUDES = $(XCBAUX_CFLAGS) $(XCBIMAGE_CFLAGS)
 
 bin_PROGRAMS = julia lissajoux flames
 
-julia_LDADD = $(XCBAUX_LIBS) $(XCBIMAGE_LIBS)
+julia_LDADD = $(XCBAUX_LIBS) $(XCBIMAGE_LIBS) $(XCBICCCM_LIBS)
 julia_SOURCES = julia.c julia.h
 
 lissajoux_LDADD = $(XCBAUX_LIBS) $(XCBIMAGE_LIBS) -lm
