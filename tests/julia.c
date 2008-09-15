@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <assert.h>
 
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
@@ -109,6 +110,8 @@ draw_julia (Data *datap)
 		       0, 0, W_W, W_H,
 		       XCB_ALL_PLANES, datap->format);
   
+  assert(datap->image);
+
   for (i = 0 ; i < datap->image->width ; i++)
     for (j = 0 ; j < datap->image->height ; j++)
       {
