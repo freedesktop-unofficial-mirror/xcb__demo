@@ -202,11 +202,12 @@ main (int argc, char *argv[])
   palette_julia (&data);
 
   xcb_atom_t deleteWindowAtom = get_atom(data.conn, "WM_DELETE_WINDOW");
+  xcb_atom_t wmprotocolsAtom = get_atom(data.conn, "WM_PROTOCOLS");
   /* Listen to X client messages in order to be able to pickup
      the "delete window" message that is generated for example
      when someone clicks the top-right X button within the window
      manager decoration (or when user hits ALT-F4). */
-  xcb_set_wm_protocols (data.conn, data.draw, 1, &deleteWindowAtom);
+  xcb_set_wm_protocols (data.conn, wmprotocolsAtom, data.draw, 1, &deleteWindowAtom);
 
   xcb_flush (data.conn); 
 

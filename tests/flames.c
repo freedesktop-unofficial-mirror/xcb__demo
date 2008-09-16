@@ -231,11 +231,12 @@ main ()
   flame_set_random_flame_base (f);
 
   xcb_atom_t deleteWindowAtom = get_atom(f->xcb.c, "WM_DELETE_WINDOW");
+  xcb_atom_t wmprotocolsAtom = get_atom(f->xcb.c, "WM_PROTOCOLS");
   /* Listen to X client messages in order to be able to pickup
      the "delete window" message that is generated for example
      when someone clicks the top-right X button within the window
      manager decoration (or when user hits ALT-F4). */
-  xcb_set_wm_protocols (f->xcb.c, f->xcb.draw, 1, &deleteWindowAtom);
+  xcb_set_wm_protocols (f->xcb.c, wmprotocolsAtom, f->xcb.draw, 1, &deleteWindowAtom);
 
   bool finished = false;
   while (!finished)
