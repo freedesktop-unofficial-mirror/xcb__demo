@@ -243,7 +243,7 @@ main ()
     {
       if ((e = xcb_poll_for_event (f->xcb.c)))
 	{
-	  switch (e->response_type & 0x7f)
+	  switch (XCB_EVENT_RESPONSE_TYPE(e))
 	    {
 	    case XCB_EXPOSE:
 	      xcb_copy_area(f->xcb.c, f->xcb.pixmap, f->xcb.draw, gc,

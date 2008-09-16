@@ -217,7 +217,7 @@ main (int argc, char *argv[])
       xcb_generic_event_t *e;
       if (e = xcb_wait_for_event(data.conn))
 	{
-          switch (e->response_type & 0x7f)
+          switch (XCB_EVENT_RESPONSE_TYPE(e))
 	    {
 	    case XCB_EXPOSE:
 	      {

@@ -1188,7 +1188,7 @@ Bool  ProcessEvent(void) {
   case NORMAL_STATE:
     while ( ContinueState &&
             NULL != (theEvent = xcb_poll_for_event( xc )) ) {  /*while ( XCheckMaskEvent( theDisplay, EVENT_MASK, &theEvent ) ) {*/
-	  switch ( theEvent->response_type & 0x7f ) {
+	  switch (XCB_EVENT_RESPONSE_TYPE(theEvent)) {
 	  case XCB_CONFIGURE_NOTIFY:
 	    theConfigureNotification = (xcb_configure_notify_event_t *)theEvent;
 		WindowWidth = theConfigureNotification->width;
