@@ -8,6 +8,7 @@
 #include <xcb/shm.h>
 #include <xcb/xcb_aux.h>
 #include <xcb/xcb_image.h>
+#include <xcb/xcb_atom.h>
 #define XCB_ALL_PLANES ~0
 
 /* Needed for xcb_set_wm_protocols() */
@@ -44,22 +45,6 @@ double height = 2.4;
 
 /* Numbers of colors in the palette */
 int cmax = 316;
-
-static xcb_atom_t
-get_atom (xcb_connection_t *connection, const char *atomName)
-{
-  if (atomName == NULL)
-    return XCB_NONE;
-  xcb_atom_t atom = XCB_NONE;
-  xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply(connection,
-	xcb_intern_atom(connection, 0, strlen(atomName), atomName), NULL);
-  if (reply)
-    {
-      atom = reply->atom;
-      free(reply);
-    }
-  return atom;
-}
 
 void
 palette_julia (Data *datap)
@@ -201,8 +186,8 @@ main (int argc, char *argv[])
 
   palette_julia (&data);
 
-  xcb_atom_t deleteWindowAtom = get_atom(data.conn, "WM_DELETE_WINDOW");
-  xcb_atom_t wmprotocolsAtom = get_atom(data.conn, "WM_PROTOCOLS");
+  xcb_atom_t deleteWindowAtom = xcb_atom_get(data.conn, "WM_DELETE_WINDOW");
+  xcb_atom_t wmprotocolsAtom = xcb_atom_get(data.conn, "WM_PROTOCOLS");
   /* Listen to X client messages in order to be able to pickup
      the "delete window" message that is generated for example
      when someone clicks the top-right X button within the window
