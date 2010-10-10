@@ -91,20 +91,6 @@ int main()
 	/*NOTREACHED*/
 }
 
-void paint(int idx)
-{
-	xcb_copy_area(c, windows[idx].p, windows[idx].w, white, 0, 0, 0, 0,
-		windows[idx].width, windows[idx].height);
-	/* FIXME: better error detection for broken pipe
-	if(!xcb_sync(c, 0))
-	{
-		perror("xcb_sync_t failed");
-		abort();
-	}
-	*/
-	xcb_aux_sync(c);
-}
-
 void *run(void *param)
 {
 	int idx = (int)param;
@@ -166,7 +152,11 @@ void *run(void *param)
 		xcb_poly_line(c, XCB_COORD_MODE_ORIGIN, windows[idx].p, white,
 			2, line);
 
-		paint(idx);
+		xcb_copy_area(c, windows[idx].p, windows[idx].w, white, 0, 0, 0, 0,
+			windows[idx].width, windows[idx].height);
+		if(xcb_flush(c) <= 0)
+			break;
+
 		theta += windows[idx].angv;
 		while(theta > 2 * PI)
 			theta -= 2 * PI;
