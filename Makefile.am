@@ -5,7 +5,7 @@ SUBDIRS = tests
 
 EXTRA_DIST = autogen.sh README
 
-INCLUDES = $(XCB_CFLAGS)
+AM_CPPFLAGS = $(XCB_CFLAGS)
 LDADD = $(XCB_LIBS)
 
 bin_PROGRAMS = dpms hypnomoire rendertest xcb-test xcbrandr xcbxf86dri \
